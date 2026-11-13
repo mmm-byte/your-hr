@@ -1,4 +1,5 @@
 import { formatDateLong } from '@/lib/date-only';
+import { WORK_MODE_LABELS, type WorkMode } from '@/lib/domain-values';
 
 /**
  * Employee identity and location (UI.md → Reusable product components).
@@ -121,9 +122,9 @@ export function JobTitleLabel({
 /**
  * A work mode, written out in full.
  *
- * The seeded value is `remote`, `hybrid`, or `office`; the label reads
- * "Remote work" rather than the raw value so it is understandable at a
- * glance without a legend.
+ * The label comes from the shared map in `src/lib/domain-values.ts`, so the
+ * table, the profile, and the filter dropdown all call the same value "On
+ * site" and "Remote".
  */
 export function WorkModeLabel({
   workMode,
@@ -132,13 +133,9 @@ export function WorkModeLabel({
   workMode: string;
   className?: string;
 }) {
-  const label: Record<string, string> = {
-    remote: 'Remote work',
-    hybrid: 'Hybrid',
-    office: 'On site',
-  };
+  const label = WORK_MODE_LABELS[workMode as WorkMode];
 
-  return <span className={className}>{label[workMode] ?? workMode}</span>;
+  return <span className={className}>{label ?? workMode}</span>;
 }
 
 /**

@@ -18,6 +18,7 @@ import { EmployeeIdentity, CountryBranchLabel, JobTitleLabel, WorkModeLabel } fr
 import { MoneyDisplay } from '@/components/product/money-display';
 import { EmploymentStatusBadge } from '@/components/product/status-badge';
 import { EmptyState, NoMatchState } from '@/components/product/empty-state';
+import { EMPLOYMENT_STATUS_LABELS } from '@/lib/domain-values';
 import { ErrorState } from '@/components/product/error-state';
 import { SalaryCard } from '@/components/product/salary-card';
 
@@ -343,6 +344,16 @@ describe('EmploymentStatusBadge', () => {
     render(<EmploymentStatusBadge status="terminated" />);
     expect(screen.getByText('Terminated')).toBeInTheDocument();
   });
+
+  it('names every status the way the filter dropdown does', () => {
+    // The labels live in one shared map, so the dropdown and the badge cannot
+    // call the same value by two different names.
+    for (const [value, label] of Object.entries(EMPLOYMENT_STATUS_LABELS)) {
+      const { unmount } = render(<EmploymentStatusBadge status={value} />);
+      expect(screen.getByText(label)).toBeInTheDocument();
+      unmount();
+    }
+  });
 });
 
 describe('EmployeeIdentity', () => {
@@ -371,7 +382,14 @@ describe('JobTitleLabel and WorkModeLabel', () => {
 
   it('writes the work mode out in full', () => {
     render(<WorkModeLabel workMode="remote" />);
-    expect(screen.getByText('Remote work')).toBeInTheDocument();
+    expect(screen.getByText('Remote')).toBeInTheDocument();
+  });
+
+  it('names a work mode the same way the filter dropdown does', () => {
+    // The label comes from one shared map, so the table and the dropdown
+    // cannot call the same value by two different names.
+    render(<WorkModeLabel workMode="office" />);
+    expect(screen.getByText('On site')).toBeInTheDocument();
   });
 });
 

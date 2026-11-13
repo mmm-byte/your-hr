@@ -27,9 +27,36 @@
 export const EMPLOYMENT_STATUSES = ['active', 'on_leave', 'terminated'] as const;
 export type EmploymentStatus = (typeof EMPLOYMENT_STATUSES)[number];
 
+/**
+ * The display label for each employment status.
+ *
+ * The stored value is a machine token; the label is what a reader sees. The
+ * label is declared here, beside the value, so a filter dropdown and a status
+ * badge cannot disagree — the directory's Status filter once offered "active"
+ * and "terminated" in raw snake_case beside badges that read "Active" and
+ * "Terminated".
+ */
+export const EMPLOYMENT_STATUS_LABELS: Readonly<Record<EmploymentStatus, string>> = {
+  active: 'Active',
+  on_leave: 'On leave',
+  terminated: 'Terminated',
+};
+
 /** Work mode. Mirrors the `work_mode` PostgreSQL enum. */
 export const WORK_MODES = ['remote', 'hybrid', 'office'] as const;
 export type WorkMode = (typeof WORK_MODES)[number];
+
+/**
+ * The display label for each work mode.
+ *
+ * `office` is stored as the machine token but shown as "On site", which is the
+ * term the product copy uses.
+ */
+export const WORK_MODE_LABELS: Readonly<Record<WorkMode, string>> = {
+  remote: 'Remote',
+  hybrid: 'Hybrid',
+  office: 'On site',
+};
 
 /** Gender. Mirrors the `gender` PostgreSQL enum. */
 export const GENDERS = ['Female', 'Male', 'Non-binary'] as const;

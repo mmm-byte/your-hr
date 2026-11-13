@@ -1,4 +1,8 @@
 import type { ReactNode } from 'react';
+import {
+  EMPLOYMENT_STATUS_LABELS,
+  type EmploymentStatus,
+} from '@/lib/domain-values';
 
 /**
  * Status badge (UI.md → Reusable product components).
@@ -47,13 +51,15 @@ export function StatusBadge({
  * communicated by text and shape as well as colour.
  */
 export function EmploymentStatusBadge({ status }: { status: string }) {
+  const label = EMPLOYMENT_STATUS_LABELS[status as EmploymentStatus];
+
   switch (status) {
     case 'active':
-      return <StatusBadge tone="positive" prefix="●">Active</StatusBadge>;
+      return <StatusBadge tone="positive" prefix="●">{label}</StatusBadge>;
     case 'on_leave':
-      return <StatusBadge tone="caution" prefix="◐">On leave</StatusBadge>;
+      return <StatusBadge tone="caution" prefix="◐">{label}</StatusBadge>;
     case 'terminated':
-      return <StatusBadge tone="neutral" prefix="○">Terminated</StatusBadge>;
+      return <StatusBadge tone="neutral" prefix="○">{label}</StatusBadge>;
     default:
       return <StatusBadge>{status}</StatusBadge>;
   }

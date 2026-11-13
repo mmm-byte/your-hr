@@ -9,8 +9,10 @@ import {
   COUNTRY_CODES,
   DEPARTMENT_NAMES,
   EMPLOYMENT_STATUSES,
+  EMPLOYMENT_STATUS_LABELS,
   JOB_LEVELS,
   WORK_MODES,
+  WORK_MODE_LABELS,
 } from '@/lib/domain-values';
 import {
   applyQueryChange,
@@ -169,7 +171,7 @@ export function FilterBar({
           value={state.status}
           options={EMPLOYMENT_STATUSES.map((status) => ({
             value: status,
-            label: status === 'on_leave' ? 'On leave' : status,
+            label: EMPLOYMENT_STATUS_LABELS[status],
           }))}
           onChange={(value) => navigate({ status: value ?? null })}
         />
@@ -180,7 +182,7 @@ export function FilterBar({
           value={state.workMode}
           options={WORK_MODES.map((mode) => ({
             value: mode,
-            label: mode === 'remote' ? 'Remote' : mode === 'office' ? 'On site' : 'Hybrid',
+            label: WORK_MODE_LABELS[mode],
           }))}
           onChange={(value) => navigate({ workMode: value ?? null })}
         />
