@@ -38,6 +38,10 @@ export function MoneyDisplay({
  * Labelled explicitly. MON-005 requires local currency and USD equivalent to be
  * distinguishable, and MON-006 requires the fixed FX reference date not to be
  * presented as a live market rate.
+ * The amount is formatted **without** its currency code, because the label
+ * beside it already names the currency: "$74,716.94 USD equivalent
+ * (synthetic)". Appending the code as well would print "USD" twice, which
+ * reads as a mistake rather than as emphasis.
  */
 export function UsdEquivalentDisplay({
   amount,
@@ -48,7 +52,8 @@ export function UsdEquivalentDisplay({
 }) {
   return (
     <span className={`tabular-nums text-muted-foreground ${className ?? ''}`}>
-      {formatMoney(amount, 'USD')} <span className="text-xs">USD equivalent (synthetic)</span>
+      {formatMoney(amount, 'USD', { includeCode: false })}{' '}
+      <span className="text-xs">USD equivalent (synthetic)</span>
     </span>
   );
 }

@@ -147,20 +147,17 @@ export function WorkModeLabel({
  * The date is formatted from its parts with an explicit UTC timezone, so the
  * rendered day is always the stored day (RPT-004). `2026-03-01` must never
  * display as 28 February.
+ *
+ * The value carries no label of its own: it sits inside a `Fact`, whose term
+ * is already the label. Repeating it would read as "Hired: Hired: 26 Feb
+ * 2026".
  */
 export function DateFact({
-  label,
   date,
   className,
 }: {
-  label: string;
   date: string;
   className?: string;
 }) {
-  return (
-    <span className={className}>
-      <span className="text-muted-foreground">{label}: </span>
-      {formatDateLong(date)}
-    </span>
-  );
+  return <span className={className}>{formatDateLong(date)}</span>;
 }
