@@ -82,6 +82,7 @@ export default async function EmployeesPage({
               hrefFor={(page) =>
                 directoryHref(buildQueryString({ ...state, page: String(page) }))
               }
+              showPageSize
             />
           </>
         ) : result.total > 0 ? (
@@ -101,6 +102,7 @@ export default async function EmployeesPage({
               hrefFor={(page) =>
                 directoryHref(buildQueryString({ ...state, page: String(page) }))
               }
+              showPageSize
             />
           </>
         ) : (

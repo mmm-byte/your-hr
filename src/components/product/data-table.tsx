@@ -1,8 +1,18 @@
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, Suspense, type ReactNode } from 'react';
 import { formatCount } from '@/lib/money';
+import { PageSizeSelect } from './page-size-select';
+
+/**
+ * The page sizes the directory offers.
+ *
+ * 25 is the default. 50 is useful when comparing a group, and 100 is the
+ * schema's maximum — the request is clamped to that cap rather than rejected
+ * (QRY-004), so a hand-edited URL still produces a usable page.
+ */
+export const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 /**
  * The employee directory table (UI.md → Table UX, UX-JOURNEY §3).
@@ -230,6 +240,8 @@ export function Pagination({
   total,
   totalPages,
   hrefFor,
+  showPageSize = false,
+  pageSizes = PAGE_SIZE_OPTIONS,
 }: {
   page: number;
   pageSize: number;
@@ -237,6 +249,10 @@ export function Pagination({
   totalPages: number;
   /** Builds the link for a page number. */
   hrefFor: (page: number) => Route;
+  /** Whether to offer the rows-per-page selector. */
+  showPageSize?: boolean;
+  /** The page sizes offered. */
+  pageSizes?: readonly number[];
 }) {
   if (total === 0) {
     return null;
@@ -301,6 +317,15 @@ export function Pagination({
           <ChevronRight aria-hidden="true" className="size-4" />
         </PagerLink>
       </div>
+
+      {showPageSize ? (
+        // The selector is a client component, because choosing a size is an
+        // interaction. It is wrapped in Suspense so the server can still
+        // render the pager without an app router being mounted.
+        <Suspense fallback={null}>
+          <PageSizeSelect pageSize={pageSize} options={pageSizes} />
+        </Suspense>
+      ) : null}
     </nav>
   );
 }

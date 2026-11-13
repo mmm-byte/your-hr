@@ -12,13 +12,15 @@
  * - The query that produces the rows (tests/integration/employee-directory.test.ts)
  */
 import { describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { DataTable, Pagination, type Column } from '@/components/product/data-table';
+import { PageSizeSelect } from '@/components/product/page-size-select';
 import { EmployeeIdentity, CountryBranchLabel, JobTitleLabel, WorkModeLabel } from '@/components/product/employee-identity';
 import { MoneyDisplay } from '@/components/product/money-display';
 import { EmploymentStatusBadge } from '@/components/product/status-badge';
 import { EmptyState, NoMatchState } from '@/components/product/empty-state';
 import { EMPLOYMENT_STATUS_LABELS } from '@/lib/domain-values';
+import { navigations } from '../setup/component';
 import { ErrorState } from '@/components/product/error-state';
 import { SalaryCard } from '@/components/product/salary-card';
 
@@ -211,6 +213,37 @@ describe('DataTable', () => {
 
     expect(screen.getByText('No employees match these filters')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+});
+
+describe('PageSizeSelect', () => {
+  it('offers the documented page sizes', () => {
+    // UX-JOURNEY Step 3 requires a page-size selector. The sizes are the
+    // schema's default and its maximum.
+    render(
+      <PageSizeSelect pageSize={25} options={[25, 50, 100]} />,
+    );
+
+    const select = screen.getByLabelText('Rows per page');
+    expect(select).toHaveValue('25');
+    expect(
+      within(select).getAllByRole('option').map((option) => option.textContent),
+    ).toEqual(['25', '50', '100']);
+  });
+
+  it('puts the chosen size in the URL and returns to page 1', () => {
+    // The size is part of the directory's URL state, so a shared link
+    // reproduces the same view, and the page resets because a page number
+    // is only meaningful relative to the size that produced it (QRY-006).
+    render(<PageSizeSelect pageSize={25} options={[25, 50, 100]} />);
+
+    fireEvent.change(screen.getByLabelText('Rows per page'), {
+      target: { value: '50' },
+    });
+
+    expect(navigations).toHaveLength(1);
+    expect(navigations[0]?.href).toContain('pageSize=50');
+    expect(navigations[0]?.href).toContain('page=1');
   });
 });
 
