@@ -17,6 +17,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { Pool, type QueryResultRow } from '@neondatabase/serverless';
+import { neonDateTypes, pgliteDateParsers } from '../src/db/date-parsers';
 
 /** Where a script should write. */
 export type DatabaseTarget =
@@ -114,7 +115,7 @@ export interface DatabaseHandle {
  */
 async function openPGlite(path: string): Promise<DatabaseHandle> {
   ensureParentDirectory(path);
-  const client = await PGlite.create(path);
+  const client = await PGlite.create(path, { parsers: pgliteDateParsers });
 
   const handle: DatabaseHandle = {
     label: `PGlite (${path})`,
@@ -152,7 +153,13 @@ async function openPGlite(path: string): Promise<DatabaseHandle> {
  * transaction runs on one session.
  */
 async function openPostgres(url: string): Promise<DatabaseHandle> {
-  const pool = new Pool({ connectionString: url, max: 1 });
+  const pool = new Pool({
+    connectionString: url,
+    max: 1,
+    // Decode `date` columns as raw `YYYY-MM-DD` text so a calendar day
+    // never shifts with the server's timezone (RPT-004, D-021).
+    types: neonDateTypes,
+  });
 
   const handle: DatabaseHandle = {
     label: `PostgreSQL at ${redactUrl(url)}`,

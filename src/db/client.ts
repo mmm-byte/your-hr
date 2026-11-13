@@ -15,6 +15,7 @@ import 'server-only';
 import { Pool } from '@neondatabase/serverless';
 import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
 import { env } from '@/lib/env';
+import { neonDateTypes } from './date-parsers';
 import { schema } from './schema';
 
 export type Database = NeonDatabase<typeof schema>;
@@ -37,6 +38,9 @@ export function getPool(): Pool {
       // promptly avoids holding a connection open between requests.
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
+      // Decode `date` columns as raw `YYYY-MM-DD` text so a calendar day
+      // never shifts with the server's timezone (RPT-004, D-021).
+      types: neonDateTypes,
     });
   }
   return pool;

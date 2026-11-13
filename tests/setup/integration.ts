@@ -21,6 +21,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
 import { afterAll, beforeAll } from 'vitest';
+import { pgliteDateParsers } from '../../src/db/date-parsers';
 
 const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 const migrationsDir = join(projectRoot, 'drizzle');
@@ -46,7 +47,11 @@ async function applyMigrations(): Promise<string[]> {
 }
 
 beforeAll(async () => {
-  client = await PGlite.create();
+  // The parsers match the production Neon configuration, so a `date` column
+  // arrives as raw `YYYY-MM-DD` text in tests exactly as it does in
+  // production (RPT-004, D-021). Without this, the tests would exercise a
+  // different date representation than the application uses.
+  client = await PGlite.create(undefined, { parsers: pgliteDateParsers });
   const applied = await applyMigrations();
   if (applied.length === 0) {
     // Not an error: the schema lands in Phase 1. Integration tests that need
