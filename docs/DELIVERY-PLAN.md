@@ -233,6 +233,8 @@ shifts the day — this is the RPT-004 bug, and it is avoided structurally by ne
 for a date-only value.
 
 **Gate 2:** `pnpm test` green with ≥1 test per rule ID; no database required; runs in <5 s.
+**Passed 2026-11-13** — 15 files, 214 tests, 0.4 s, no database. See §7 for the defects
+found and fixed.
 
 ---
 
@@ -525,14 +527,38 @@ The seed refuses a rerun and the migration runner skips applied files, so both a
 safe to repeat. `pnpm lint`, `pnpm typecheck`, `pnpm test` (11 files, 154 tests),
 `pnpm test:integration` (3 files, 38 tests), and `pnpm build` are green.
 
-**Phase 2 — next.** Domain core: pure, fast, deterministic rules with no I/O.
+**Phase 2 — complete.** Gate 2 passed on 2026-11-13: `pnpm test` (15 files, **214 tests**,
+**0.4 s** — the budget is under 5 s), `pnpm lint`, `pnpm typecheck`, `pnpm build`, and
+`pnpm test:integration` are all green. No Phase 2 module performs I/O; the boundary schemas
+import only `@/lib/domain-values` and `@/lib/date-only`.
 
-1. `src/lib/salary-rules.ts` — revision validation and eligibility (SAL-002…009, SAL-012, ELG-001…004).
-2. `src/lib/current-salary.ts` — as-of-date selection and future-effective labelling (SAL-007, SAL-008, RPT-001, RPT-004).
-3. `src/lib/analytics.ts` — median with correct even/odd handling; empty ≠ zero (ANA-003, ANA-004).
-4. `src/lib/employment.ts` — hire/termination/status invariants (EMP-003…006).
-5. Extend `src/lib/money.ts` and `src/lib/date-only.ts` only where a rule is missing.
-6. Prove Gate 2 — every rule has a unit test and no module performs I/O — then push.
+Five domain defects were found and fixed during the phase, each with a regression test:
+
+| Defect | Fix |
+|---|---|
+| `toMinorUnits` silently truncated a third decimal place | Rejects it — the column is `numeric(12,2)` (D-026) |
+| `toMinorUnits` rejected negative amounts, so it was not a true inverse | Accepts a leading `-` |
+| `formatMoney` routed the amount through `Number()`, losing a cent at the top of the range | Formats the exact decimal **string**; rejects a malformed amount instead of rendering `$NaN` |
+| `totalSameCurrency` could not enforce its own single-currency guard | Takes `Money[]`, so a mixed-currency total cannot be expressed (RPT-007) |
+| The bonus percentage was compared with `Number()` | Compared as hundredths of a percent in `BigInt` (SAL-003) |
+
+Two structural changes were also made:
+
+- **`src/lib/domain-values.ts`** (new) declares every closed value set once, as a readonly
+  tuple. `src/db/schema.ts` derives its `pgEnum` declarations from those tuples — the
+  regenerated migration was **byte-identical**, which proves the database shape did not
+  change (D-024).
+- **`src/schemas/*.ts`** (new) holds the Zod boundary contracts: a bounded page size
+  (default 25, cap 100, clamped rather than rejected), allow-listed sorts and groupings,
+  and no silent coercion (D-025).
+
+**Phase 3 — next.** The first vertical slice: the employee directory and profile.
+
+1. `src/db/queries/employees.ts` — server-side search/filter/sort/pagination over 10,000 rows (QRY-001…007, ANA-007).
+2. `src/db/queries/current-salary.ts` — as-of-date query joining employees → salary_records (SAL-007, RPT-001).
+3. `/employees` and `/employees/[employeeId]` — the directory and the profile, with loading, empty, error, and not-found states.
+4. `ReportingDatePicker` — the shared reporting-date control, carried in the URL as `?asOf=YYYY-MM-DD` (RPT-003).
+5. Prove Gate 3 — the reviewer can find an employee and understand them — then push.
 
 **Open items requiring your decision (not blocking — the recommended default will be used):**
 
