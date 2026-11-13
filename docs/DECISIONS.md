@@ -267,6 +267,16 @@ This is a lightweight decision register. Add an entry when a decision changes pr
 **Revisit when:** the seed stops populating `usd_equivalent` for some records, which would leave the sort with nulls and no total order.
 
 
+## D-032 — The reporting date is bounded to the past and the present
+**Status:** accepted
+**Context:** The reporting-date control sets `max` to today, because the product asks "what did this person earn as of this date" and the future is not a meaningful answer. The URL, however, accepted any date. A shared link carrying `?asOf=2030-01-01` rendered a date input that the browser itself reported as invalid — "Value must be 11/13/2026 or earlier" — with no explanation on the page, and the page header cheerfully said "Reporting context: As of 1 Jan 2030".
+**Decision:** The reporting date is bounded in two places, so the two can never disagree. `readReportingDate` in `src/lib/url-state.ts` falls back to today for a malformed or future value, and the Zod schema rejects a future date outright, so the query selects the salary for the same date the page displays. The bound lives in the schema as well as the reader because the schema is the boundary where untrusted input arrives.
+**Alternatives considered:** (a) allow the future and drop the `max` on the control — the future becomes a legitimate "what will this person earn" question, which is a product decision this repository has not made, and it would need a rule for which scheduled revision applies; (b) clamp the future date to today in the route only — the query would still use the unbounded date, so the table and the header could disagree; (c) show an error for a future date — a hand-edited URL would then produce an error page, which QRY-003 forbids.
+**Why:** The fallback keeps the product's existing meaning, keeps the date control valid, and keeps an unknown or hostile value harmless.
+**Consequences:** The schema test pins the clock, because "not in the future" is a relation to the current date and its expectations would otherwise change meaning as the real date moves past them.
+**Revisit when:** the product decides that a future reporting date should mean "what this person's pay will be", which would need a documented rule for a salary with several future-effective records.
+
+
 ## Decision template
 ### D-XXX — Title
 **Status:** proposed / accepted / superseded

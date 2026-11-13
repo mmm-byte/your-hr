@@ -31,7 +31,7 @@ deliberately not applicable for that capability (see the non-applicable table).
 | ACC-001 no auth layer | — | — | tests/component/shell.test.tsx | planned (Phase 6) | no login route; no session cookie |
 | ACC-002 assessment notice | — | — | tests/component/shell.test.tsx | planned (Phase 6) | visible on every page |
 | ACC-003 actor surrogate | tests/unit/actor.test.ts | planned (Phase 4) | — | — | audit actor = `hr-manager` |
-| RPT-001 reporting date default | tests/unit/date-only.test.ts, tests/unit/employee-directory-schema.test.ts | tests/integration/current-salary.test.ts | tests/component/directory.test.tsx | — | defaults to today |
+| RPT-001 reporting date default | tests/unit/date-only.test.ts, tests/unit/employee-directory-schema.test.ts, tests/unit/url-state.test.ts | tests/integration/current-salary.test.ts | tests/component/directory.test.tsx | — | defaults to today; a malformed or future date is ignored |
 | RPT-003 URL-carried state | tests/unit/employee-directory-schema.test.ts, tests/unit/url-state.test.ts | tests/integration/rendered-directory.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | filters + asOf survive refresh/back |
 | RPT-004 date-only, no TZ shift | tests/unit/date-only.test.ts, tests/unit/date-parsers.test.ts | tests/integration/date-parsers.test.ts | — | — | same calendar day in any locale; six timezones (D-021) |
 | RPT-006 display rounding | tests/unit/money.test.ts | — | tests/component/product.test.tsx | — | DB value remains source of truth |

@@ -281,6 +281,9 @@ Defects found and fixed during the gate — each is now covered by a test:
 | `?page=999` claimed "the workforce has not been loaded yet" | QRY-004 | The page states that it is past the end and keeps a pager |
 | The pager printed "Page 999 of 400" and a range running past the total | QRY-004 | The range is dropped and the back link goes to the last page with results |
 | The salary sort compared six currencies as one number, so "highest salary" was an artefact of the currency mix | MON-004, RPT-007 | The sort uses `usd_equivalent`, the basis every record shares, and the table states the basis (D-031) |
+| A URL carrying a future reporting date put the date control into a state the browser reported as invalid | RPT-001 | The reporting date is bounded to the past and the present, in the schema and in both routes |
+| The profile's "no salary record" message printed the raw ISO date | RPT-004 | Every date surface goes through `formatDateLong` |
+| The Status filter offered "active" and "terminated" in raw snake_case beside badges that read "Active" and "Terminated" | UI.md | The display labels live in one shared map beside the values they label |
 | PostgreSQL sorted the country enum by declaration order, not alphabetically | QRY-005 | Enum sort columns are cast to text |
 | `applyQueryChange` ignored the `page` key, so a page change was never applied | QRY-004 | The key is handled like every other one |
 
