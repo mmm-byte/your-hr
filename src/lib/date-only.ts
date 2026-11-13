@@ -130,7 +130,23 @@ export function formatDateOnly(
   return formatter.format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-/** Format a date-only value as `DD Mon YYYY`, e.g. `1 Mar 2027`. */
+/**
+ * Format a date-only value as `DD Mon YYYY`, e.g. `1 Mar 2026`.
+ *
+ * The day-first order is the format the product's own copy uses — "Workforce
+ * as of 12 Nov 2026", "Scheduled — effective 1 Mar 2027" (UX-JOURNEY §2, §4).
+ * `Intl.DateTimeFormat` cannot produce that order with the `en-US` locale, so
+ * the parts are formatted individually and joined.
+ *
+ * The parts come from the stored string, never from a `Date`, so the rendered
+ * day is always the stored day (RPT-004).
+ */
 export function formatDateLong(date: DateOnly, locale = 'en-US'): string {
-  return formatDateOnly(date, { year: 'numeric', month: 'short', day: 'numeric' }, locale);
+  const [year, month, day] = date.split('-').map(Number) as [number, number, number];
+  const monthName = new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+
+  return `${day} ${monthName} ${year}`;
 }

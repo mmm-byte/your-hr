@@ -51,12 +51,12 @@ describe('formatDateOnly', () => {
     // 28 February in a negative-offset timezone. Date-only formatting must not
     // shift the day.
     expect(formatDateOnly('2026-03-01', { timeZone: 'UTC' }, 'en-US')).toContain('1');
-    expect(formatDateLong('2026-03-01', 'en-US')).toBe('Mar 1, 2026');
+    expect(formatDateLong('2026-03-01', 'en-US')).toBe('1 Mar 2026');
   });
 
   it('formats the first day of a month as the first, not the last of the previous', () => {
-    expect(formatDateLong('2026-03-01', 'en-US')).toBe('Mar 1, 2026');
-    expect(formatDateLong('2026-01-01', 'en-US')).toBe('Jan 1, 2026');
+    expect(formatDateLong('2026-03-01', 'en-US')).toBe('1 Mar 2026');
+    expect(formatDateLong('2026-01-01', 'en-US')).toBe('1 Jan 2026');
   });
 });
 
