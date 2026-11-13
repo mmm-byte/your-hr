@@ -46,6 +46,15 @@ describe('UsdEquivalentDisplay', () => {
 
     expect(screen.getByText(/USD equivalent \(synthetic\)/)).toBeInTheDocument();
   });
+
+  it('names the currency once, not twice', () => {
+    // The label already says "USD equivalent"; repeating the code would read
+    // as a mistake rather than as emphasis.
+    const { container } = render(<UsdEquivalentDisplay amount="51000.00" />);
+
+    expect(container.textContent).toContain('51,000.00 USD equivalent (synthetic)');
+    expect(container.textContent).not.toContain('USD USD');
+  });
 });
 
 describe('BonusDisplay', () => {
