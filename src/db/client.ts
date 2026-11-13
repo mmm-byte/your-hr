@@ -15,13 +15,9 @@ import 'server-only';
 import { Pool } from '@neondatabase/serverless';
 import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
 import { env } from '@/lib/env';
+import { schema } from './schema';
 
-/**
- * The schema type is supplied by the Phase 1 schema module. Until then it is
- * `Record<string, never>` so the client is typed and usable but carries no
- * table definitions — the schema is added in one place in Phase 1.
- */
-export type Database = NeonDatabase<Record<string, never>>;
+export type Database = NeonDatabase<typeof schema>;
 
 let pool: Pool | undefined;
 let database: Database | undefined;
@@ -54,7 +50,7 @@ export function getPool(): Pool {
  */
 export function getDatabase(): Database {
   if (!database) {
-    database = drizzle(getPool(), { casing: 'snake_case' });
+    database = drizzle(getPool(), { casing: 'snake_case', schema });
   }
   return database;
 }
