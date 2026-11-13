@@ -58,9 +58,19 @@ describe('the /employees page against the seeded workforce', () => {
 
   it('renders one row per page slot, not the whole workforce', async () => {
     const html = await renderPage({});
-    const bodyRows = (html.match(/<tr/g) ?? []).length;
+
+    // The narrow-screen row-details blocks are their own <tr>, so they are
+    // excluded here: this assertion is about how many *employees* are sent to
+    // the browser, not about how the table is laid out.
+    const dataRows = (html.match(/<tr(?! data-testid="row-details)/g) ?? []).length;
+
     // One header row plus 25 data rows.
-    expect(bodyRows).toBe(26);
+    expect(dataRows).toBe(26);
+
+    // The real measure of "not the whole workforce": only 25 employees are
+    // linked to a profile, not 10,000.
+    const profileLinks = (html.match(/href="\/employees\/\d+"/g) ?? []).length;
+    expect(profileLinks).toBe(25);
   });
 
   it('states the reporting context', async () => {

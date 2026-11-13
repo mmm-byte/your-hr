@@ -247,26 +247,54 @@ export function Pagination({
   const canGoBack = page > 1;
   const canGoForward = page < totalPages;
 
+  // A page beyond the last page has no rows. The range would run past the
+  // total ("25,001–25,000 of 10,000"), which reads as a mistake, so the
+  // range is dropped and only the total is stated (QRY-004).
+  const isPastEnd = firstRow > total;
+
   return (
     <nav
       aria-label="Pagination"
       className="flex flex-col items-center justify-between gap-3 border-t border-border pt-4 sm:flex-row"
     >
       <p className="text-sm text-muted-foreground">
-        Showing <span className="font-medium text-foreground">{formatCount(firstRow)}</span>–
-        <span className="font-medium text-foreground">{formatCount(lastRow)}</span> of{' '}
-        <span className="font-medium text-foreground">{formatCount(total)}</span> matching
-        employees
+        {isPastEnd ? (
+          <>
+            <span className="font-medium text-foreground">{formatCount(total)}</span> matching
+            employees — no results on this page
+          </>
+        ) : (
+          <>
+            Showing{' '}
+            <span className="font-medium text-foreground">{formatCount(firstRow)}</span>–
+            <span className="font-medium text-foreground">{formatCount(lastRow)}</span> of{' '}
+            <span className="font-medium text-foreground">{formatCount(total)}</span> matching
+            employees
+          </>
+        )}
       </p>
 
       <div className="flex items-center gap-2">
-        <PagerLink href={hrefFor(page - 1)} disabled={!canGoBack} label="Previous page">
+        <PagerLink
+          href={hrefFor(isPastEnd ? totalPages : page - 1)}
+          disabled={!canGoBack}
+          label={isPastEnd ? 'Last page with results' : 'Previous page'}
+        >
           <ChevronLeft aria-hidden="true" className="size-4" />
         </PagerLink>
 
         <span className="text-sm text-muted-foreground">
-          Page <span className="font-medium text-foreground">{page}</span> of{' '}
-          <span className="font-medium text-foreground">{Math.max(totalPages, 1)}</span>
+          {isPastEnd ? (
+            <>
+              Page <span className="font-medium text-foreground">{page}</span> — beyond the last
+              page
+            </>
+          ) : (
+            <>
+              Page <span className="font-medium text-foreground">{page}</span> of{' '}
+              <span className="font-medium text-foreground">{Math.max(totalPages, 1)}</span>
+            </>
+          )}
         </span>
 
         <PagerLink href={hrefFor(page + 1)} disabled={!canGoForward} label="Next page">

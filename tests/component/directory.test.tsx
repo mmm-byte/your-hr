@@ -213,6 +213,53 @@ describe('DataTable', () => {
   });
 });
 
+describe('Pagination on a page beyond the last one', () => {
+  it('states the total without a range that runs past it', () => {
+    // QRY-004: a page beyond the last page returns an empty result with a
+    // safe navigation affordance. A range like "25,001-25,000 of 10,000"
+    // would read as a mistake, so only the total is stated.
+    render(
+      <Pagination
+        page={999}
+        pageSize={25}
+        total={10_000}
+        totalPages={400}
+        hrefFor={(page) => `/employees?page=${page}` as never}
+      />,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav.textContent).toContain('10,000 matching employees');
+    expect(nav.textContent).toContain('no results on this page');
+    expect(nav.textContent).not.toContain('25,001');
+    expect(nav.textContent).not.toContain('25,000');
+  });
+
+  it('offers a way back to a page that has results', () => {
+    render(
+      <Pagination
+        page={999}
+        pageSize={25}
+        total={10_000}
+        totalPages={400}
+        hrefFor={(page) => `/employees?page=${page}` as never}
+      />,
+    );
+
+    // The back link jumps to the last page that actually has results, not to
+    // page 998, which is also empty.
+    expect(screen.getByRole('link', { name: 'Last page with results' })).toHaveAttribute(
+      'href',
+      '/employees?page=400',
+    );
+    expect(screen.queryByRole('link', { name: 'Next page' })).not.toBeInTheDocument();
+
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav.textContent).toContain('beyond the last page');
+    expect(nav.textContent).not.toContain('999 of 400');
+  });
+});
+
 describe('Pagination', () => {
   it('states the real total, not the page size', () => {
     render(

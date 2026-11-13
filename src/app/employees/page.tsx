@@ -84,6 +84,25 @@ export default async function EmployeesPage({
               }
             />
           </>
+        ) : result.total > 0 ? (
+          // The reader is past the last page. The workforce is loaded and the
+          // filters matched — the page number is simply out of range, so the
+          // pager is still rendered to offer a way back (QRY-004).
+          <>
+            <EmptyState
+              title={`Page ${result.page} is past the end of the results`}
+              description={`${formatCount(result.total)} employees match your filters. Use the pager to go back to a page with results.`}
+            />
+            <Pagination
+              page={result.page}
+              pageSize={result.pageSize}
+              total={result.total}
+              totalPages={result.totalPages}
+              hrefFor={(page) =>
+                directoryHref(buildQueryString({ ...state, page: String(page) }))
+              }
+            />
+          </>
         ) : (
           <DirectoryEmptyState
             isEmptyPopulation={result.isEmptyPopulation}
