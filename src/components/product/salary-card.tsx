@@ -24,6 +24,7 @@ export function SalaryCard({
   usdEquivalent,
   reportingDate,
   label = 'Current salary',
+  asOf,
   scheduled,
 }: {
   baseSalary: string;
@@ -34,15 +35,28 @@ export function SalaryCard({
   reportingDate: string;
   /** The heading, which differs for a terminated employee. */
   label?: string;
+  /**
+   * The "as of" wording and the date it refers to.
+   *
+   * A terminated employee's card says "Effective as of termination" and
+   * carries the termination date, so the card never claims a final salary is
+   * current (ELG-006). A currently employed employee's card says "Current as
+   * of" and carries the reporting date (RPT-002).
+   */
+  asOf?: { readonly label: string; readonly date: string };
   /** The next scheduled change, shown separately when one exists. */
   scheduled?: { baseSalary: string; currencyCode: string; effectiveFrom: string } | null;
 }) {
+  const asOfLabel = asOf?.label ?? 'Current as of';
+  const asOfDate = asOf?.date ?? reportingDate;
+
   return (
     <section className="rounded-lg border border-border bg-surface p-4" aria-label={label}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-medium">{label}</h2>
         <p className="text-xs text-muted-foreground">
-          Current as of <span className="font-medium text-foreground">{formatDateLong(reportingDate)}</span>
+          {asOfLabel}{' '}
+          <span className="font-medium text-foreground">{formatDateLong(asOfDate)}</span>
         </p>
       </div>
 

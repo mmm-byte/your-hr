@@ -5,9 +5,9 @@ import { ArrowLeft, CalendarDays, Gavel, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { getDatabase } from '@/db/client';
 import { queryEmployeeProfile } from '@/db/queries/current-salary';
-import { todayDateOnly } from '@/lib/date-only';
+import { formatDateLong, todayDateOnly } from '@/lib/date-only';
 import { readQueryState } from '@/lib/url-state';
-import { salaryCardLabel } from '@/lib/employment';
+import { salaryCardAsOf, salaryCardLabel } from '@/lib/employment';
 import { CountryBranchLabel, DateFact, EmployeeIdentity, Fact, JobTitleLabel, WorkModeLabel } from '@/components/product/employee-identity';
 import { PageHeader } from '@/components/product/page-header';
 import { ReportingDatePicker } from '@/components/product/reporting-date-picker';
@@ -70,7 +70,7 @@ export default async function EmployeeProfilePage({
 
       <PageHeader
         title={`${employee.firstName} ${employee.lastName}`}
-        context={`As of ${reportingDate}`}
+        context={`As of ${formatDateLong(reportingDate)}`}
         actions={
           <Suspense fallback={null}>
             <ReportingDatePicker value={reportingDate} max={todayDateOnly()} />
@@ -111,11 +111,11 @@ export default async function EmployeeProfilePage({
               <WorkModeLabel workMode={employee.workMode} />
             </Fact>
             <Fact label="Hired">
-              <DateFact label="Hired" date={employee.hireDate} />
+              <DateFact date={employee.hireDate} />
             </Fact>
             {employee.terminationDate !== null ? (
               <Fact label="Termination">
-                <DateFact label="Termination" date={employee.terminationDate} />
+                <DateFact date={employee.terminationDate} />
               </Fact>
             ) : null}
             <Fact label="Country">{employee.countryCode}</Fact>
@@ -143,6 +143,14 @@ export default async function EmployeeProfilePage({
                   terminationDate: employee.terminationDate,
                   employmentStatus: employee.employmentStatus,
                 })}
+                asOf={salaryCardAsOf(
+                  {
+                    hireDate: employee.hireDate,
+                    terminationDate: employee.terminationDate,
+                    employmentStatus: employee.employmentStatus,
+                  },
+                  reportingDate,
+                )}
                 scheduled={
                   profile.scheduledSalary !== null
                     ? {
@@ -184,7 +192,7 @@ export default async function EmployeeProfilePage({
                 title="Latest performance review"
                 value={
                   profile.performance !== null
-                    ? `${profile.performance.rating}/5 on ${profile.performance.reviewDate}, goals met ${profile.performance.goalsMetPct}%`
+                    ? `${profile.performance.rating}/5 on ${formatDateLong(profile.performance.reviewDate)}, goals met ${profile.performance.goalsMetPct}%`
                     : 'No performance review'
                 }
                 note="Seed summary — the latest review only"
@@ -194,7 +202,7 @@ export default async function EmployeeProfilePage({
                 <SummaryCard
                   icon={<Gavel aria-hidden="true" className="size-4" />}
                   title="Employment history"
-                  value={`Left on ${profile.attrition.leftOn} — ${profile.attrition.reason.replace(/_/g, ' ')}`}
+                  value={`Left on ${formatDateLong(profile.attrition.leftOn)} — ${profile.attrition.reason.replace(/_/g, ' ')}`}
                   note="Seed attrition event"
                 />
               ) : null}

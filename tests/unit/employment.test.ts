@@ -12,6 +12,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   isCurrentlyEmployed,
+  salaryCardAsOf,
   salaryCardLabel,
   validateEmployment,
   yearsOfService,
@@ -179,5 +180,48 @@ describe('yearsOfService', () => {
   it('stops at the termination date once employment has ended', () => {
     const years = yearsOfService('2020-01-01', '2026-01-01', '2022-01-01');
     expect(years).toBeCloseTo(2, 2);
+  });
+});
+
+describe('salaryCardAsOf', () => {
+  it('states a terminated employee salary as of their termination date', () => {
+    // ELG-006: the final salary must be labelled as of termination. Stating
+    // the reporting date would claim a 2021 salary was current as of 2026.
+    expect(
+      salaryCardAsOf(
+        {
+          hireDate: '2019-12-02',
+          terminationDate: '2021-03-28',
+          employmentStatus: 'terminated',
+        },
+        '2026-11-13',
+      ),
+    ).toEqual({ label: 'Effective as of termination', date: '2021-03-28' });
+  });
+
+  it('states an employed employee salary as of the reporting date', () => {
+    expect(
+      salaryCardAsOf(
+        {
+          hireDate: '2020-01-15',
+          terminationDate: null,
+          employmentStatus: 'active',
+        },
+        '2026-11-13',
+      ),
+    ).toEqual({ label: 'Current as of', date: '2026-11-13' });
+  });
+
+  it('states an on-leave employee salary as of the reporting date', () => {
+    expect(
+      salaryCardAsOf(
+        {
+          hireDate: '2020-01-15',
+          terminationDate: null,
+          employmentStatus: 'on_leave',
+        },
+        '2026-11-13',
+      ),
+    ).toEqual({ label: 'Current as of', date: '2026-11-13' });
   });
 });

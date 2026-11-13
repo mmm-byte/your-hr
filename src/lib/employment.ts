@@ -94,3 +94,25 @@ export function yearsOfService(
 export function salaryCardLabel(facts: EmploymentFacts): string {
   return facts.employmentStatus === 'terminated' ? 'Final salary' : 'Current salary';
 }
+
+/**
+ * The "as of" wording for an employee's salary card.
+ *
+ * A terminated employee's final salary is the one effective as of their
+ * termination, so the card states the termination date rather than the
+ * reporting date. Stating the reporting date there would say a salary that
+ * stopped in 2021 was current as of 2026 — a plain misstatement of the
+ * record (ELG-006).
+ *
+ * A currently employed employee's salary is stated as of the reporting date
+ * (RPT-002).
+ */
+export function salaryCardAsOf(
+  facts: EmploymentFacts,
+  reportingDate: DateOnly,
+): { readonly label: string; readonly date: DateOnly } {
+  if (facts.employmentStatus === 'terminated' && facts.terminationDate !== null) {
+    return { label: 'Effective as of termination', date: facts.terminationDate };
+  }
+  return { label: 'Current as of', date: reportingDate };
+}
