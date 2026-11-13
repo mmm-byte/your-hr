@@ -284,6 +284,8 @@ Defects found and fixed during the gate — each is now covered by a test:
 | A URL carrying a future reporting date put the date control into a state the browser reported as invalid | RPT-001 | The reporting date is bounded to the past and the present, in the schema and in both routes |
 | The profile's "no salary record" message printed the raw ISO date | RPT-004 | Every date surface goes through `formatDateLong` |
 | The Status filter offered "active" and "terminated" in raw snake_case beside badges that read "Active" and "Terminated" | UI.md | The display labels live in one shared map beside the values they label |
+| The pager had no rows-per-page selector, which the journey requires | UX-JOURNEY §3 | The size is part of the URL state, and changing it returns to page 1 |
+| The salary history stated no timestamp, which the journey requires | UX-JOURNEY §4 | Each record states when it was written, in UTC |
 | PostgreSQL sorted the country enum by declaration order, not alphabetically | QRY-005 | Enum sort columns are cast to text |
 | `applyQueryChange` ignored the `page` key, so a page change was never applied | QRY-004 | The key is handled like every other one |
 

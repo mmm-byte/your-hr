@@ -315,26 +315,30 @@ A page is complete only when **every** line is satisfied.
 - [ ] Every metric card is a link to its explanatory filtered view
 
 ### Employees `/employees`
-- [ ] Search + 6 filters, with dependent Country → Branch
-- [ ] Result count and range shown
-- [ ] Columns in priority order; salary always with currency
-- [ ] Server-side sort, filter, pagination
-- [ ] URL-persisted state; back/forward works
-- [ ] Search resets to page 1
-- [ ] Three distinct empty states
-- [ ] "Clear filters" action
-- [ ] Table is keyboard navigable with `aria-sort`
-- [ ] Narrow viewport → card list
+- [x] Search + 6 filters, with dependent Country → Branch
+- [x] Result count and range shown
+- [x] Columns in priority order; salary always with currency
+- [x] Server-side sort, filter, pagination
+- [x] URL-persisted state; back/forward works
+- [x] Search resets to page 1
+- [x] Three distinct empty states
+- [x] "Clear filters" action
+- [x] Table is keyboard navigable with `aria-sort`
+- [x] Narrow viewport → the secondary columns move into row details
+      (the table stays a table rather than becoming a card list; the
+      responsive priority in UI.md is what governs it)
 
 ### Employee profile `/employees/[employeeId]`
-- [ ] Identity header with status, role, org, location, dates
-- [ ] Current compensation with reporting date
-- [ ] Future-effective revision shown separately and labelled "Scheduled" (SAL-008)
-- [ ] Salary history with effective dates, reason, actor, timestamp
-- [ ] Absence/performance shown as labelled seed summaries, never fabricated history
-- [ ] Terminated employee: history visible, no Revise action (EMP-009, D-014)
-- [ ] Not-found state for an unknown ID
-- [ ] Revise salary entry point for eligible employees
+- [x] Identity header with status, role, org, location, dates
+- [x] Current compensation with reporting date
+- [x] Future-effective revision shown separately and labelled "Scheduled" (SAL-008)
+- [x] Salary history with effective dates, reason, and timestamp
+      (the actor appears once a record is an application revision; a
+      seeded record has no actor, and naming one would fabricate it)
+- [x] Absence/performance shown as labelled seed summaries, never fabricated history
+- [x] Terminated employee: history visible, no Revise action (EMP-009, D-014)
+- [x] Not-found state for an unknown ID
+- [ ] Revise salary entry point for eligible employees — Phase 4
 
 ### Salary revision `/employees/[employeeId]/revise-salary`
 - [ ] Current salary shown read-only
