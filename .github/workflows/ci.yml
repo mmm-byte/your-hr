@@ -1,0 +1,66 @@
+name: CI
+
+# Gate 0 runs the same commands as the local gate (DELIVERY-PLAN.md §4.1):
+# install -> lint -> typecheck -> test -> build.
+#
+# The job is split so a failure names the broken gate instead of collapsing
+# into one red step. Later phases add `test:integration` and `test:e2e` as
+# their own steps (they need PGlite and a seeded database respectively).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# A newer push to the same branch makes the older run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, typecheck, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # `next build` must never depend on a live database. Phase 0 has no
+      # schema and no Neon project, so the build must succeed with the
+      # environment absent. Only the health route touches it at runtime.
+      CI: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
