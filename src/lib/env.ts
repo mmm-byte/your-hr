@@ -13,20 +13,22 @@ import 'server-only';
  */
 
 export interface ServerEnv {
-  readonly DATABASE_URL: string;
+  /**
+   * The Neon connection string.
+   *
+   * Optional when `PGLITE_PATH` names a local database, because the local
+   * target needs no server and no credential.
+   */
+  readonly DATABASE_URL?: string;
   readonly DATABASE_URL_UNPOOLED?: string;
   readonly NEXT_PUBLIC_APP_URL?: string;
-}
-
-function requireValue(name: string, value: string | undefined): string {
-  if (!value || value.trim() === '') {
-    throw new Error(
-      `Missing required environment variable ${name}. ` +
-        'Set it in .env.local for development, or in the deployment environment. ' +
-        'See .env.example.',
-    );
-  }
-  return value;
+  /**
+   * A local PGlite database, used instead of the Neon pool when set.
+   *
+   * The operational scripts already accept this path (scripts/README.md), so
+   * the application and the scripts can share one local target.
+   */
+  readonly PGLITE_PATH?: string;
 }
 
 /**
@@ -36,10 +38,22 @@ function requireValue(name: string, value: string | undefined): string {
  * touch the database can still build.
  */
 export function getServerEnv(): ServerEnv {
+  const pglitePath = process.env.PGLITE_PATH?.trim();
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+
+  if (!pglitePath && !databaseUrl) {
+    throw new Error(
+      'No database target configured. Set DATABASE_URL for a PostgreSQL server, ' +
+        'or PGLITE_PATH for a local PGlite database. ' +
+        'See .env.example.',
+    );
+  }
+
   return {
-    DATABASE_URL: requireValue('DATABASE_URL', process.env.DATABASE_URL),
+    DATABASE_URL: databaseUrl,
     DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    PGLITE_PATH: pglitePath,
   };
 }
 

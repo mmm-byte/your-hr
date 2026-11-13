@@ -10,8 +10,14 @@ const nextConfig: NextConfig = {
    * transaction-capable driver (D-015): `drizzle-orm/neon-serverless` opens a
    * WebSocket connection through the `Pool`, and bundling either package breaks
    * that connection.
+   *
+   * PGlite is excluded for a different reason: it reads its data directory
+   * through Node's `path` and `fs` modules, and the bundler rewrites those
+   * calls into a form the runtime rejects with
+   * `ERR_INVALID_ARG_TYPE: The "path" argument must be of type string`.
+   * Excluding it keeps the local development database working (D-009).
    */
-  serverExternalPackages: ['@neondatabase/serverless', 'ws'],
+  serverExternalPackages: ['@neondatabase/serverless', 'ws', '@electric-sql/pglite'],
 
   /**
    * Typed routes are generated from the app directory. They give a compile-time
