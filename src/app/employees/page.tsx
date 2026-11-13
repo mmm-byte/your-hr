@@ -7,7 +7,7 @@ import { queryEmployeeDirectory } from '@/db/queries/employees';
 import { parseEmployeeDirectoryQuery } from '@/schemas/employee-directory';
 import { formatDateLong, todayDateOnly } from '@/lib/date-only';
 import { formatCount } from '@/lib/money';
-import { buildQueryString, hasActiveFilter, readQueryState } from '@/lib/url-state';
+import { buildQueryString, hasActiveFilter, readQueryState, readReportingDate } from '@/lib/url-state';
 import { BRANCH_CODES } from '@/lib/domain-values';
 import { DataTable, Pagination, type Column } from '@/components/product/data-table';
 import { EmptyState, NoMatchState } from '@/components/product/empty-state';
@@ -49,7 +49,7 @@ export default async function EmployeesPage({
     return <DirectoryUnavailable />;
   }
 
-  const reportingDate = query.asOf ?? todayDateOnly();
+  const reportingDate = readReportingDate(state, todayDateOnly());
   const db = getDatabase();
   const result = await queryEmployeeDirectory(db, query);
 

@@ -15,8 +15,39 @@
  * page and concludes the data is missing (QRY-006).
  */
 
+import { isDateOnly } from './date-only';
+
 /** The query-string keys the directory and analytics surfaces use. */
 export type QueryState = Readonly<Record<string, string | undefined>>;
+
+/**
+ * Read the reporting date out of the query string.
+ *
+ * The reporting date is a **past or present** calendar day: the product asks
+ * "what did this person earn as of this date", so the future is not a
+ * meaningful answer, and the date picker does not offer it.
+ *
+ * A value that is not a real calendar day, or that lies in the future, falls
+ * back to today rather than failing (QRY-003). Accepting a future date would
+ * put the date control in a state the browser itself reports as invalid —
+ * "Value must be 11/13/2026 or earlier" — with no explanation on the page.
+ *
+ * @param state the parsed query string
+ * @param today the current calendar day, as `YYYY-MM-DD`
+ */
+export function readReportingDate(state: QueryState, today: string): string {
+  const value = state.asOf;
+
+  if (value === undefined || value === '') {
+    return today;
+  }
+
+  if (!isDateOnly(value)) {
+    return today;
+  }
+
+  return value > today ? today : value;
+}
 
 /**
  * Build a query string from a state record.

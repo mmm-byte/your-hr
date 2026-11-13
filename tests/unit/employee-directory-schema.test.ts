@@ -5,17 +5,35 @@
  * - QRY-004 the page size is bounded and clamped
  * - QRY-005 the sort field comes from an explicit allow-list
  * - RPT-004 the reporting date must be a real calendar day
+ * - RPT-001 a reporting date in the future is ignored
  * - RPT-003 filters and the reporting date are carried in the query string
  *
  * Does not cover:
- * - The database query that consumes these values (Phase 3)
- * - The directory UI and its filter bar (Phase 3)
+ * - The database query that consumes these values
+ *   (tests/integration/employee-directory.test.ts)
+ * - The directory UI and its filter bar (tests/component/directory.test.tsx)
  */
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_EMPLOYEE_DIRECTORY_SORT,
   parseEmployeeDirectoryQuery,
 } from '@/schemas/employee-directory';
+
+/**
+ * The reporting date is bounded by "not in the future", so this suite needs a
+ * fixed clock — otherwise the expectations below would change meaning as the
+ * real date moves past them.
+ */
+const FIXED_NOW = new Date('2026-06-15T12:00:00.000Z');
+
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(FIXED_NOW);
+});
+
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 describe('parseEmployeeDirectoryQuery', () => {
   it('returns null for an input that is not a query object', () => {
@@ -68,6 +86,20 @@ describe('parseEmployeeDirectoryQuery', () => {
       sort: 'salary',
       asOf: '2026-03-01',
     });
+  });
+
+  it('ignores a reporting date in the future', () => {
+    // The product asks what a person earned as of a date, so the future is
+    // not a meaningful answer, and the date control does not offer it.
+    const query = parseEmployeeDirectoryQuery({ asOf: '2027-01-01' });
+
+    expect(query?.asOf).toBeUndefined();
+  });
+
+  it('ignores a malformed reporting date instead of failing', () => {
+    const query = parseEmployeeDirectoryQuery({ asOf: '2026-02-30' });
+
+    expect(query?.asOf).toBeUndefined();
   });
 
   it('ignores an unknown filter value instead of failing', () => {

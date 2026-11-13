@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { getDatabase } from '@/db/client';
 import { queryEmployeeProfile } from '@/db/queries/current-salary';
 import { formatDateLong, todayDateOnly } from '@/lib/date-only';
-import { readQueryState } from '@/lib/url-state';
+import { readQueryState, readReportingDate } from '@/lib/url-state';
 import { salaryCardAsOf, salaryCardLabel } from '@/lib/employment';
 import { CountryBranchLabel, DateFact, EmployeeIdentity, Fact, JobTitleLabel, WorkModeLabel } from '@/components/product/employee-identity';
 import { PageHeader } from '@/components/product/page-header';
@@ -46,7 +46,7 @@ export default async function EmployeeProfilePage({
     notFound();
   }
 
-  const reportingDate = state.asOf ?? todayDateOnly();
+  const reportingDate = readReportingDate(state, todayDateOnly());
   const db = getDatabase();
   const profile = await queryEmployeeProfile(db, id, reportingDate);
 
@@ -164,7 +164,7 @@ export default async function EmployeeProfilePage({
             ) : (
               <EmptyState
                 title="No salary record"
-                description={`No salary record is effective on or before ${reportingDate}.`}
+                description={`No salary record is effective on or before ${formatDateLong(reportingDate)}.`}
               />
             )}
           </section>

@@ -30,7 +30,7 @@
  */
 
 import { z } from 'zod';
-import { isDateOnly } from '@/lib/date-only';
+import { isDateOnly, todayDateOnly } from '@/lib/date-only';
 import {
   branchSchema,
   countrySchema,
@@ -86,12 +86,20 @@ const sortSchema = z.preprocess(
  * The value is optional; when it is absent the caller uses the server's
  * current calendar date (RPT-001). It is validated as a real day, so
  * `2026-02-30` is rejected rather than silently shifted.
+ *
+ * A **future** date is also rejected. The product asks what a person earned
+ * as of a date, so the future is not a meaningful answer, and the date control
+ * does not offer it. Accepting one would put the control into a state the
+ * browser itself reports as invalid, with no explanation on the page.
  */
 const asOfSchema = z.preprocess(
   queryString,
   z
     .string()
     .refine((value) => isDateOnly(value), { message: 'Enter a valid reporting date.' })
+    .refine((value) => value <= todayDateOnly(), {
+      message: 'The reporting date cannot be in the future.',
+    })
     .optional()
     .catch(undefined),
 );

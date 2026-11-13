@@ -3,6 +3,8 @@
  * - QRY-006 applying or changing a filter resets the page to 1
  * - RPT-003 the filters and the reporting date travel in the URL
  * - QRY-003 an ignored filter leaves no trace in the URL
+ * - RPT-001 the reporting date falls back to today when it is absent,
+ *   malformed, or in the future
  *
  * Does not cover:
  * - The router itself (Next.js), only the pure state transitions
@@ -14,6 +16,7 @@ import {
   clearFilters,
   hasActiveFilter,
   readQueryState,
+  readReportingDate,
 } from '@/lib/url-state';
 
 describe('buildQueryString', () => {
@@ -135,5 +138,37 @@ describe('readQueryState', () => {
   it('reads a plain record, taking the first of a repeated value', () => {
     expect(readQueryState({ country: ['US', 'IN'] })).toEqual({ country: 'US' });
     expect(readQueryState({ country: 'US' })).toEqual({ country: 'US' });
+  });
+});
+
+describe('readReportingDate', () => {
+  const TODAY = '2026-11-13';
+
+  it('uses today when no reporting date is given', () => {
+    expect(readReportingDate({}, TODAY)).toBe(TODAY);
+  });
+
+  it('keeps a past reporting date', () => {
+    expect(readReportingDate({ asOf: '2020-01-15' }, TODAY)).toBe('2020-01-15');
+  });
+
+  it('keeps today', () => {
+    expect(readReportingDate({ asOf: TODAY }, TODAY)).toBe(TODAY);
+  });
+
+  it('falls back to today for a future date', () => {
+    // The product asks what a person earned as of a date, so the future is
+    // not a meaningful answer. Accepting one would put the date control into
+    // a state the browser itself reports as invalid.
+    expect(readReportingDate({ asOf: '2030-01-01' }, TODAY)).toBe(TODAY);
+  });
+
+  it('falls back to today for a malformed date', () => {
+    expect(readReportingDate({ asOf: '2026-02-30' }, TODAY)).toBe(TODAY);
+    expect(readReportingDate({ asOf: 'not-a-date' }, TODAY)).toBe(TODAY);
+  });
+
+  it('falls back to today for an empty value', () => {
+    expect(readReportingDate({ asOf: '' }, TODAY)).toBe(TODAY);
   });
 });
