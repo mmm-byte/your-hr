@@ -47,3 +47,6 @@ Thumbs.db
 .cache/
 .tmp/
 tmp/
+
+# pnpm metadata cache — local, regenerated on demand
+.pnpm-cache/
