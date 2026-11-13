@@ -257,8 +257,8 @@ verified pagination; profile shows the correct current salary for a past, presen
 
 **Gate 3 — passed 2026-11-13.** Evidence:
 
-- `pnpm lint`, `pnpm typecheck`, `pnpm test` (19 files, 278 tests), `pnpm test:integration`
-  (8 files, 118 tests), `pnpm build` — all green.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (20 files, 298 tests), `pnpm test:integration`
+  (8 files, 120 tests), `pnpm build` — all green. The CI run is green on every commit.
 - The directory is rendered from the seeded 10,000-person cohort in PGlite.
   `tests/integration/rendered-directory.test.ts` asserts the page links 25 profiles, not
   10,000, so the browser never holds the workforce (ANA-007).
@@ -266,7 +266,8 @@ verified pagination; profile shows the correct current salary for a past, presen
   and future reporting date, and for a date exactly equal to an effective date (SAL-007).
 - The profile and the directory were inspected in a browser against the real cohort: the
   reporting context, the identity grid, the salary history timeline, the not-found page, a
-  terminated employee, the empty and no-match states, and the 390px layout.
+  terminated employee, the empty and no-match states, the 390px layout, the keyboard focus
+  order, the dependent country-to-branch filter, and the rows-per-page selector.
 
 Defects found and fixed during the gate — each is now covered by a test:
 
