@@ -30,7 +30,7 @@
  *   is, not as dated history (SEED-001, SEED-002, D-018).
  */
 
-import { desc, eq, sql, type SQL } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import type { PgDatabase } from 'drizzle-orm/pg-core';
 import type { PgQueryResultHKT } from 'drizzle-orm/pg-core/session';
 import {
@@ -44,6 +44,7 @@ import {
   schema,
 } from '../schema';
 import type { DateOnly } from '@/lib/date-only';
+import type { EmploymentStatus } from '@/lib/domain-values';
 
 /** A Drizzle handle for a PostgreSQL database. */
 export type ProfileDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
@@ -56,7 +57,7 @@ export interface EmployeeProfile {
   readonly email: string;
   readonly jobTitle: string;
   readonly jobLevel: number;
-  readonly employmentStatus: string;
+  readonly employmentStatus: EmploymentStatus;
   readonly workMode: string;
   readonly gender: string;
   readonly countryCode: string;
