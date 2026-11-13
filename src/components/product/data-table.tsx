@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { formatCount } from '@/lib/money';
 
 /**
@@ -26,7 +26,15 @@ export interface Column<T> {
   /** The `sort` value for this column, when the column is sortable. */
   readonly sortValue?: string;
   readonly render: (row: T) => ReactNode;
-  /** Hidden below the `sm` breakpoint to keep the narrow layout readable. */
+  /**
+   * A secondary attribute: hidden from the table body below the `md`
+   * breakpoint and shown in the row's details block instead.
+   *
+   * UI.md → Responsive priority keeps identity, status, role, location and
+   * current salary visible on a small screen and moves only the remaining
+   * secondary attributes into the row details, rather than shrinking the text
+   * until it cannot be read.
+   */
   readonly secondary?: boolean;
 }
 
@@ -57,6 +65,8 @@ export function DataTable<T>({
   if (rows.length === 0) {
     return <>{emptyState}</>;
   }
+
+  const secondaryColumns = columns.filter((column) => column.secondary);
 
   return (
     <div className="overflow-x-auto">
@@ -115,9 +125,62 @@ export function DataTable<T>({
               ))}
             </tr>
           ))}
+          {secondaryColumns.length > 0 && (
+            <RowDetails
+              columns={secondaryColumns}
+              rows={rows}
+              rowKey={rowKey}
+            />
+          )}
         </tbody>
       </table>
     </div>
+  );
+}
+
+/**
+ * The narrow-screen row details.
+ *
+ * UI.md → Responsive priority requires the secondary attributes to be moved
+ * into row details on a small screen rather than dropped, so nothing the
+ * table knows is lost when the column disappears. The block is hidden from the
+ * `md` breakpoint up, where the columns themselves are visible.
+ *
+ * It is a separate `<tr>` per row rather than an extra `<td>` inside the row,
+ * so the table's row structure stays one header cell set and one body cell
+ * set per row — a screen reader reading the table linearly still meets the
+ * columns in the declared order.
+ */
+function RowDetails<T>({
+  columns,
+  rows,
+  rowKey,
+}: {
+  columns: readonly Column<T>[];
+  rows: readonly T[];
+  rowKey: (row: T) => string | number;
+}) {
+  return (
+    <>
+      {rows.map((row) => (
+        <tr
+          key={`details-${rowKey(row)}`}
+          data-testid={`row-details-${rowKey(row)}`}
+          className="border-b border-border last:border-0 md:hidden"
+        >
+          <td colSpan={columns.length} className="px-3 pb-3 pt-0">
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+              {columns.map((column) => (
+                <Fragment key={column.key}>
+                  <dt className="text-muted-foreground">{column.header}</dt>
+                  <dd className="min-w-0">{column.render(row)}</dd>
+                </Fragment>
+              ))}
+            </dl>
+          </td>
+        </tr>
+      ))}
+    </>
   );
 }
 

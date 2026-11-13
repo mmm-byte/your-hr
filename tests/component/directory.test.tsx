@@ -27,11 +27,26 @@ interface Row {
   status: string;
   salary: string | null;
   currency: string | null;
+  workMode: string;
 }
 
 const ROWS: Row[] = [
-  { id: 1, name: 'Ann Abbott', status: 'active', salary: '54206.05', currency: 'USD' },
-  { id: 2, name: 'Bob Baker', status: 'on_leave', salary: '1200000.00', currency: 'INR' },
+  {
+    id: 1,
+    name: 'Ann Abbott',
+    status: 'active',
+    salary: '54206.05',
+    currency: 'USD',
+    workMode: 'Hybrid',
+  },
+  {
+    id: 2,
+    name: 'Bob Baker',
+    status: 'on_leave',
+    salary: '1200000.00',
+    currency: 'INR',
+    workMode: 'Remote',
+  },
 ];
 
 const COLUMNS: Column<Row>[] = [
@@ -57,6 +72,17 @@ const COLUMNS: Column<Row>[] = [
       ) : (
         <span>No salary record</span>
       ),
+  },
+];
+
+const COLUMNS_WITH_SECONDARY: Column<Row>[] = [
+  ...COLUMNS,
+  {
+    key: 'workMode',
+    header: 'Work mode',
+    sortValue: 'workMode',
+    secondary: true,
+    render: (row) => <span>{row.workMode}</span>,
   },
 ];
 
@@ -124,6 +150,48 @@ describe('DataTable', () => {
       within(header).queryByRole('link', { name: 'Current salary' }),
     );
     expect(salaryHeader).toHaveAttribute('aria-sort', 'descending');
+  });
+
+  it('moves the secondary attributes into the row details on a narrow screen', () => {
+    // UI.md -> Responsive priority: the secondary attributes must be moved
+    // into row details rather than dropped, so nothing the table knows is
+    // lost when the column disappears.
+    render(
+      <DataTable
+        columns={COLUMNS_WITH_SECONDARY}
+        rows={ROWS}
+        rowKey={(row) => row.id}
+        rowHref={(row) => `/employees/${row.id}` as never}
+        caption="Employees"
+        sort="employee"
+        sortHref={() => '/employees' as never}
+        emptyState={<p>none</p>}
+      />,
+    );
+
+    const details = screen.getByTestId('row-details-1');
+    expect(within(details).getByText('Work mode')).toBeInTheDocument();
+    expect(within(details).getByText('Hybrid')).toBeInTheDocument();
+  });
+
+  it('keeps the row details out of the wide layout', () => {
+    // The block carries `md:hidden`, so it is only present on a narrow
+    // screen. Asserting the class keeps the two layouts from double-printing
+    // the same value.
+    render(
+      <DataTable
+        columns={COLUMNS_WITH_SECONDARY}
+        rows={ROWS}
+        rowKey={(row) => row.id}
+        rowHref={(row) => `/employees/${row.id}` as never}
+        caption="Employees"
+        sort="employee"
+        sortHref={() => '/employees' as never}
+        emptyState={<p>none</p>}
+      />,
+    );
+
+    expect(screen.getByTestId('row-details-1').className).toContain('md:hidden');
   });
 
   it('shows the empty state instead of an empty table', () => {

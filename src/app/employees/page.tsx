@@ -5,7 +5,8 @@ import { SearchX } from 'lucide-react';
 import { getDatabase } from '@/db/client';
 import { queryEmployeeDirectory } from '@/db/queries/employees';
 import { parseEmployeeDirectoryQuery } from '@/schemas/employee-directory';
-import { todayDateOnly } from '@/lib/date-only';
+import { formatDateLong, todayDateOnly } from '@/lib/date-only';
+import { formatCount } from '@/lib/money';
 import { buildQueryString, hasActiveFilter, readQueryState } from '@/lib/url-state';
 import { BRANCH_CODES } from '@/lib/domain-values';
 import { DataTable, Pagination, type Column } from '@/components/product/data-table';
@@ -57,7 +58,7 @@ export default async function EmployeesPage({
       <PageHeader
         title="Employees"
         description="Search and filter the workforce, then open a profile to review compensation history."
-        context={`As of ${reportingDate}`}
+        context={`As of ${formatDateLong(reportingDate)}`}
         actions={
           <Suspense fallback={null}>
             <ReportingDatePicker value={reportingDate} max={todayDateOnly()} />
@@ -140,7 +141,6 @@ function EmployeeTable({
       key: 'location',
       header: 'Country / Branch',
       sortValue: 'country',
-      secondary: true,
       render: (row) => (
         <CountryBranchLabel
           countryCode={row.countryCode}
