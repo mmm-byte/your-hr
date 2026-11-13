@@ -3,6 +3,7 @@
  * - RPT-004 date-only values never shift across time zones
  * - RPT-001 the reporting-date default
  * - Date comparison, range checks, and day arithmetic
+ * - A timestamp is rendered in UTC, so two readers in two zones agree
  *
  * Does not cover:
  * - Rendering in the UI (tests/component/money-display.test.tsx)
@@ -20,6 +21,7 @@ import {
   isOnOrBefore,
   isWithinRange,
   todayDateOnly,
+  formatTimestamp,
 } from '@/lib/date-only';
 
 describe('isDateOnly', () => {
@@ -106,5 +108,26 @@ describe('daysBetween', () => {
     expect(daysBetween('2026-01-01', '2026-01-31')).toBe(30);
     expect(daysBetween('2026-01-31', '2026-01-01')).toBe(-30);
     expect(daysBetween('2026-01-01', '2026-01-01')).toBe(0);
+  });
+});
+
+describe('formatTimestamp', () => {
+  it('renders the day, the month, the year, and the time in UTC', () => {
+    expect(formatTimestamp(new Date('2026-03-24T14:05:00.000Z'))).toBe(
+      '24 Mar 2026, 14:05 UTC',
+    );
+  });
+
+  it('does not shift the day across time zones', () => {
+    // A timestamp is rendered in UTC, so two readers in two zones see the
+    // same figure. A local rendering would show different days.
+    const timestamp = new Date('2026-03-24T23:30:00.000Z');
+    expect(formatTimestamp(timestamp)).toContain('24 Mar 2026');
+  });
+
+  it('pads the hour and the minute', () => {
+    expect(formatTimestamp(new Date('2026-03-24T09:07:00.000Z'))).toBe(
+      '24 Mar 2026, 09:07 UTC',
+    );
   });
 });

@@ -227,6 +227,7 @@ export default async function EmployeeProfilePage({
                   currencyCode={record.currencyCode}
                   usdEquivalent={record.usdEquivalent}
                   changeReason={record.changeReason}
+                  recordedAt={record.createdAt}
                   isCurrent={profile.currentSalary?.id === record.id}
                   isScheduled={profile.scheduledSalary?.id === record.id}
                 />

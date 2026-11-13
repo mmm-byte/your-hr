@@ -1,7 +1,7 @@
 import { CalendarClock } from 'lucide-react';
 import { BonusDisplay, MoneyDisplay, UsdEquivalentDisplay } from './money-display';
 import { StatusBadge } from './status-badge';
-import { formatDateLong } from '@/lib/date-only';
+import { formatDateLong, formatTimestamp } from '@/lib/date-only';
 
 /**
  * The compensation card (UI.md → Employee page, RPT-002, SAL-008, ELG-006).
@@ -115,6 +115,7 @@ export function SalaryHistoryEntry({
   currencyCode,
   usdEquivalent,
   changeReason,
+  recordedAt,
   isCurrent,
   isScheduled,
 }: {
@@ -124,6 +125,8 @@ export function SalaryHistoryEntry({
   currencyCode: string;
   usdEquivalent: string | null;
   changeReason: string | null;
+  /** When the record was written, as a timestamp. */
+  recordedAt: Date | null;
   isCurrent: boolean;
   isScheduled: boolean;
 }) {
@@ -150,6 +153,12 @@ export function SalaryHistoryEntry({
 
       {changeReason !== null ? (
         <p className="mt-1 text-xs text-muted-foreground">Reason: {changeReason}</p>
+      ) : null}
+
+      {recordedAt !== null ? (
+        <p className="mt-1 text-xs text-muted-foreground">
+          Recorded {formatTimestamp(recordedAt)}
+        </p>
       ) : null}
     </li>
   );

@@ -150,3 +150,38 @@ export function formatDateLong(date: DateOnly, locale = 'en-US'): string {
 
   return `${day} ${monthName} ${year}`;
 }
+
+/**
+ * Format a timestamp as `DD Mon YYYY, HH:MM UTC`.
+ *
+ * A **timestamp** is a different thing from a date-only value: it records
+ * when a row was written, not which calendar day it belongs to. It carries a
+ * time and a zone, and it is rendered in UTC so two readers in two zones see
+ * the same figure — which is what a reader comparing two records needs.
+ *
+ * A date-only value must never be formatted with this function: it has no
+ * time of day, and treating midnight as a time would invent precision the
+ * data does not carry (RPT-004).
+ */
+export function formatTimestamp(value: Date, locale = 'en-US'): string {
+  const day = new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(value);
+  const month = new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    timeZone: 'UTC',
+  }).format(value);
+  const year = new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(value);
+  const time = new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'UTC',
+  }).format(value);
+
+  return `${day} ${month} ${year}, ${time} UTC`;
+}
