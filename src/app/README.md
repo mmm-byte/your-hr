@@ -19,6 +19,13 @@ Route/UI -> focused server query or application operation -> domain/database.
 ## Required documentation
 Non-trivial route modules identify purpose, data source, applicable rules, and tests in a compact relationship header.
 
+## Routes
+- `/employees` — the directory. A server component that reads the search, filters, sort, page, and reporting date from the URL and renders one bounded page (D-029, QRY-001…007, ANA-007).
+- `/employees/[employeeId]` — the profile. Identity, employment, compensation, salary history, and the supporting summaries (EMP-009, SAL-007, ELG-006).
+
+Each route carries its own `loading.tsx`, `error.tsx`, and — for the profile — a scoped
+`not-found.tsx`, so every data surface has all four states (UI.md → States required on data surfaces).
+
 ## Required tests
 - route/query integration behavior
 - loading/empty/error/not-found states where meaningful

@@ -16,51 +16,51 @@ deliberately not applicable for that capability (see the non-applicable table).
 |---|---|---|---|---|---|
 | EMP-001 unique employee ID | — | tests/integration/schema.test.ts | — | — | DB constraint + seed verify |
 | EMP-004 termination >= hire | tests/unit/employment.test.ts | tests/integration/schema.test.ts | — | — | boundary equal dates |
-| MON-001 explicit currency | tests/unit/money.test.ts | — | tests/component/product.test.tsx | planned (Phase 3) | every money value carries a code |
-| MON-004 multi-currency totals | tests/unit/money.test.ts, tests/unit/analytics.test.ts | — | tests/component/product.test.tsx | planned (Phase 3) | grouped vs reporting equivalent |
+| MON-001 explicit currency | tests/unit/money.test.ts | — | tests/component/product.test.tsx | planned (Phase 6) | every money value carries a code |
+| MON-004 multi-currency totals | tests/unit/money.test.ts, tests/unit/analytics.test.ts | — | tests/component/product.test.tsx | planned (Phase 6) | grouped vs reporting equivalent |
 | MON-002 exact decimal | tests/unit/money.test.ts, tests/unit/salary-rules.test.ts | tests/integration/schema.test.ts | — | — | no float round-trip; string preserved |
 | SAL-005 append-only revision | — | planned (Phase 4) | planned (Phase 4) | planned (Phase 4) | old history unchanged |
 | SAL-006 duplicate effective date | tests/unit/salary-rules.test.ts | planned (Phase 4) | planned (Phase 4) | planned (Phase 4) | conflict mapping → SALARY_EFFECTIVE_DATE_CONFLICT |
-| SAL-007 current salary as-of date | tests/unit/current-salary.test.ts | tests/integration/current-salary.test.ts | — | planned (Phase 3) | past/current/future/equal date |
-| SAL-008 scheduled label | tests/unit/current-salary.test.ts | planned (Phase 3) | planned (Phase 3) | planned (Phase 3) | future revision never shown as current |
+| SAL-007 current salary as-of date | tests/unit/current-salary.test.ts | tests/integration/current-salary.test.ts, tests/integration/rendered-profile.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | past/current/future/equal date |
+| SAL-008 scheduled label | tests/unit/current-salary.test.ts | tests/integration/current-salary.test.ts, tests/integration/rendered-profile.test.ts | — | planned (Phase 6) | future revision never shown as current; the scheduled block is labelled and separate |
 | SAL-010 salary + audit atomicity | — | planned (Phase 4) | — | planned (Phase 4) | forced audit failure rollback |
 | SAL-011 stale update conflict | tests/unit/salary-rules.test.ts | planned (Phase 4) | planned (Phase 4) | planned (Phase 4) | two editor simulation |
 | ANA-003 median | tests/unit/analytics.test.ts | planned (Phase 5) | — | — | empty/one/odd/even |
 | ANA-004 empty not zero | tests/unit/analytics.test.ts | planned (Phase 5) | tests/component/product.test.tsx | planned (Phase 5) | empty aggregate → empty state |
-| ANA-007 server-side query | — | planned (Phase 3) | — | planned (Phase 3) | 10k rows never in browser |
-| ACC-001 no auth layer | — | — | planned (Phase 3) | planned (Phase 3) | no login route; no session cookie |
-| ACC-002 assessment notice | — | — | tests/component/shell.test.tsx | planned (Phase 3) | visible on every page |
+| ANA-007 server-side query | — | tests/integration/employee-directory.test.ts, tests/integration/seeded-directory.test.ts, tests/integration/rendered-directory.test.ts | — | planned (Phase 6) | 10k rows never in browser; the rendered page links 25 profiles |
+| ACC-001 no auth layer | — | — | tests/component/shell.test.tsx | planned (Phase 6) | no login route; no session cookie |
+| ACC-002 assessment notice | — | — | tests/component/shell.test.tsx | planned (Phase 6) | visible on every page |
 | ACC-003 actor surrogate | tests/unit/actor.test.ts | planned (Phase 4) | — | — | audit actor = `hr-manager` |
-| RPT-001 reporting date default | tests/unit/date-only.test.ts, tests/unit/employee-directory-schema.test.ts | planned (Phase 3) | — | — | defaults to today |
-| RPT-003 URL-carried state | tests/unit/employee-directory-schema.test.ts | planned (Phase 3) | — | planned (Phase 3) | filters + asOf survive refresh/back |
+| RPT-001 reporting date default | tests/unit/date-only.test.ts, tests/unit/employee-directory-schema.test.ts | tests/integration/current-salary.test.ts | tests/component/directory.test.tsx | — | defaults to today |
+| RPT-003 URL-carried state | tests/unit/employee-directory-schema.test.ts, tests/unit/url-state.test.ts | tests/integration/rendered-directory.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | filters + asOf survive refresh/back |
 | RPT-004 date-only, no TZ shift | tests/unit/date-only.test.ts, tests/unit/date-parsers.test.ts | tests/integration/date-parsers.test.ts | — | — | same calendar day in any locale; six timezones (D-021) |
 | RPT-006 display rounding | tests/unit/money.test.ts | — | tests/component/product.test.tsx | — | DB value remains source of truth |
-| RPT-007 no mixed-currency total | tests/unit/money.test.ts, tests/unit/analytics.test.ts | planned (Phase 3) | planned (Phase 3) | planned (Phase 3) | every total single-currency or labelled |
+| RPT-007 no mixed-currency total | tests/unit/money.test.ts, tests/unit/analytics.test.ts | — | tests/component/product.test.tsx | planned (Phase 6) | every total single-currency or labelled |
 | ELG-001 terminated not revisable | tests/unit/salary-rules.test.ts | planned (Phase 4) | planned (Phase 4) | planned (Phase 4) | `SALARY_NOT_ELIGIBLE` |
 | ELG-002/003 date window | tests/unit/salary-rules.test.ts | planned (Phase 4) | planned (Phase 4) | planned (Phase 4) | before hire / after termination |
 | ELG-004 currency fixed | tests/unit/salary-rules.test.ts | planned (Phase 4) | — | — | submitted currency cannot change policy |
-| ELG-005 no revision surface | — | — | planned (Phase 3) | planned (Phase 3) | absent for terminated employees |
-| ELG-006 terminated history visible | tests/unit/employment.test.ts | planned (Phase 3) | planned (Phase 3) | planned (Phase 3) | labelled as-of termination |
+| ELG-005 no revision surface | — | — | planned (Phase 4) | planned (Phase 6) | absent for terminated employees; the revision surface arrives in Phase 4 |
+| ELG-006 terminated history visible | tests/unit/employment.test.ts | tests/integration/current-salary.test.ts, tests/integration/rendered-profile.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | labelled as-of termination: the card says "Final salary" and "Effective as of termination" |
 | CON-001 version conflict | tests/unit/salary-rules.test.ts | planned (Phase 4) | planned (Phase 4) | planned (Phase 4) | stale write rejected, nothing written |
 | CON-002 conflict preserves input | — | — | planned (Phase 4) | planned (Phase 4) | user can re-apply after refresh |
 | CON-003 version increments | — | planned (Phase 4) | — | — | increments on success only |
-| QRY-001 search fields | tests/unit/query-params.test.ts | planned (Phase 3) | — | planned (Phase 3) | ID/name/email |
-| QRY-002 literal wildcards | tests/unit/query-params.test.ts | planned (Phase 3) | — | planned (Phase 3) | `%`, `_`, `'`, `\` are literal |
-| QRY-003 invalid filter ignored | tests/unit/employee-directory-schema.test.ts, tests/unit/compensation-analytics-schema.test.ts | planned (Phase 3) | — | — | falls back to default, no error |
-| QRY-004 page bounds | tests/unit/query-params.test.ts | planned (Phase 3) | — | planned (Phase 3) | page beyond last → empty, not error |
-| QRY-005 sort allow-list | tests/unit/employee-directory-schema.test.ts, tests/unit/compensation-analytics-schema.test.ts | planned (Phase 3) | — | planned (Phase 3) | unknown sort → default |
-| QRY-006 filter resets page | — | planned (Phase 3) | — | planned (Phase 3) | change filter → page 1 |
-| QRY-007 empty distinction | — | planned (Phase 3) | tests/component/product.test.tsx | planned (Phase 3) | no data vs no filter match |
-| SEED-001 absence summary | tests/unit/seed-dataset.test.ts | tests/integration/seed.test.ts | planned (Phase 3) | — | no fabricated dated events |
-| SEED-003 summary labelled | — | — | planned (Phase 3) | — | UI says "seed summary" |
+| QRY-001 search fields | tests/unit/query-params.test.ts | tests/integration/employee-directory.test.ts, tests/integration/seeded-directory.test.ts | — | planned (Phase 6) | ID/name/email |
+| QRY-002 literal wildcards | tests/unit/query-params.test.ts | tests/integration/employee-directory.test.ts | — | planned (Phase 6) | `%`, `_`, `'`, `\` are literal |
+| QRY-003 invalid filter ignored | tests/unit/employee-directory-schema.test.ts, tests/unit/compensation-analytics-schema.test.ts | tests/integration/employee-directory.test.ts | — | — | falls back to default, no error |
+| QRY-004 page bounds | tests/unit/query-params.test.ts | tests/integration/employee-directory.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | page beyond last → empty with a pager, not an error |
+| QRY-005 sort allow-list | tests/unit/employee-directory-schema.test.ts, tests/unit/compensation-analytics-schema.test.ts | tests/integration/employee-directory.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | unknown sort → default |
+| QRY-006 filter resets page | tests/unit/url-state.test.ts | tests/integration/employee-directory.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | change filter → page 1 |
+| QRY-007 empty distinction | — | tests/integration/employee-directory.test.ts, tests/integration/seeded-directory.test.ts | tests/component/product.test.tsx | planned (Phase 6) | no data vs no filter match |
+| SEED-001 absence summary | tests/unit/seed-dataset.test.ts | tests/integration/seed.test.ts | tests/integration/rendered-profile.test.ts | — | no fabricated dated events |
+| SEED-003 summary labelled | — | tests/integration/rendered-profile.test.ts | — | planned (Phase 6) | UI says "seed summary" |
 | SEED-004 stable currency | tests/unit/seed-dataset.test.ts | tests/integration/seed.test.ts | — | — | 0 employees change currency (verified) |
-| Employee directory | — | planned (Phase 3) | planned (Phase 3) | planned (Phase 3) | filtering/sort/page bounds |
-| Employee profile | — | planned (Phase 3) | planned (Phase 3) | planned (Phase 3) | not-found/terminated/no support records |
+| Employee directory | tests/unit/url-state.test.ts | tests/integration/employee-directory.test.ts, tests/integration/seeded-directory.test.ts, tests/integration/rendered-directory.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | filtering/sort/page bounds; the responsive priority is held by the row-details block |
+| Employee profile | — | tests/integration/current-salary.test.ts, tests/integration/rendered-profile.test.ts | tests/component/directory.test.tsx | planned (Phase 6) | not-found/terminated/no support records |
 | Salary revision flow | tests/unit/salary-rules.test.ts | planned (Phase 4) | planned (Phase 4) | planned (Phase 4) | pending/double-submit/conflict/success |
 | Data quality | — | planned (Phase 5) | planned (Phase 5) | planned (Phase 5) | deterministic classification |
 | Seed invariants | tests/unit/csv.test.ts, tests/unit/seed-dataset.test.ts | tests/integration/seed.test.ts | — | — | repeat run, orphan, duplicate; `pnpm db:verify` 29/29 |
-| Health endpoint | — | planned (Phase 3) | — | planned (Phase 3) | DB unavailable + safe output |
-| Error code catalogue | tests/unit/error-codes.test.ts | — | planned (Phase 3) | — | every D-017 code maps to a UI recovery |
+| Health endpoint | — | planned (Phase 5) | — | planned (Phase 6) | DB unavailable + safe output |
+| Error code catalogue | tests/unit/error-codes.test.ts | — | tests/component/error-state.test.tsx | planned (Phase 6) | every D-017 code maps to a UI recovery |
 
 ## Phase 1 coverage (complete 2026-11-13)
 The data layer is covered end to end. `pnpm db:verify` asserts 29 invariants against a

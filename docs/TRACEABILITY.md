@@ -4,15 +4,15 @@ This matrix prevents drift between product, UI, database, and tests. Update it a
 
 | Capability | Domain rules | Data/database | UI surface | Test evidence |
 |---|---|---|---|---|
-| Find employees | EMP-*, QRY-001…007 | employees + branch/department indexes | `/employees` | `tests/unit/employment.test.ts` (employment state); `tests/unit/employee-directory-schema.test.ts`, `tests/unit/query-params.test.ts` (boundary); query + E2E search/filter in Phase 3 |
-| View employee | EMP-*, MON-*, RPT-* | employees + current salary query | `/employees/[id]` | integration + not-found UI |
-| View salary history | SAL-001,004,006,007,008 | salary_records | employee Compensation section | `tests/unit/current-salary.test.ts`, `tests/unit/salary-rules.test.ts` |
+| Find employees | EMP-*, QRY-001…007 | employees + branch/department indexes | `/employees` | `tests/unit/employment.test.ts` (employment state); `tests/unit/employee-directory-schema.test.ts`, `tests/unit/query-params.test.ts`, `tests/unit/url-state.test.ts` (boundary); `tests/integration/employee-directory.test.ts` (query); `tests/integration/seeded-directory.test.ts` + `tests/integration/rendered-directory.test.ts` (the real cohort); `tests/component/directory.test.tsx` (table, pager, responsive) |
+| View employee | EMP-*, MON-*, RPT-* | employees + current salary query | `/employees/[id]` | `tests/integration/current-salary.test.ts` (query); `tests/integration/rendered-profile.test.ts` (identity, history, not-found); `tests/component/directory.test.tsx` (salary card) |
+| View salary history | SAL-001,004,006,007,008 | salary_records | employee Compensation section | `tests/unit/current-salary.test.ts`, `tests/unit/salary-rules.test.ts`; `tests/integration/current-salary.test.ts`, `tests/integration/rendered-profile.test.ts` (as-of, scheduled label) |
 | Revise salary | SAL-002–012, AUD-*, ELG-*, CON-* | salary_records + audit_events transaction | `/employees/[id]/revise-salary` | domain + transaction + E2E |
 | Multi-country compensation | MON-*, RPT-005/007 | branches/currency + localized seed provenance | profile/compensation/analytics | `tests/unit/money.test.ts` (exactness, formatting, single-currency total) |
 | Compensation analytics | ANA-*, RPT-006/007 | aggregate queries/indexes | `/analytics`, `/compensation` | `tests/unit/analytics.test.ts` (median, empty≠zero, currency grouping); `tests/unit/compensation-analytics-schema.test.ts` (allow-listed metric/grouping) |
-| Absence context | ABS-*, SEED-001/003 | absence_records (summary rows) | employee Absence section | summary-not-history tests |
-| Performance context | PERF-*, SEED-002/003 | performance_reviews (latest only) | employee Performance section | snapshot-only tests |
-| Attrition context | ATT-*, EMP-009 | attrition_events + employee termination | employee history | historical visibility tests |
+| Absence context | ABS-*, SEED-001/003 | absence_records (summary rows) | employee Absence section | `tests/integration/rendered-profile.test.ts` (summary-not-history, labelled) |
+| Performance context | PERF-*, SEED-002/003 | performance_reviews (latest only) | employee Performance section | `tests/integration/rendered-profile.test.ts` (snapshot-only, labelled) |
+| Attrition context | ATT-*, EMP-009 | attrition_events + employee termination | employee history | `tests/integration/rendered-profile.test.ts` (historical visibility after termination) |
 | Data quality | dataset invariants | verification queries | `/data-quality` | deterministic issue classification |
 | Access model | ACC-001…004 | — | global shell + assessment notice | `tests/unit/error-codes.test.ts`, `tests/unit/actor.test.ts` (ACC-003 surrogate) |
 | Reporting date | RPT-001…004 | as-of queries | all money surfaces | `tests/unit/date-only.test.ts`, `tests/unit/current-salary.test.ts` |
@@ -21,7 +21,7 @@ This matrix prevents drift between product, UI, database, and tests. Update it a
 | Database invariants | SAL-002/003/006, EMP-002/004/005/006, MON-002, ABS-*, PERF-* | 8 tables, pgEnum types, CHECK/UNIQUE/index definitions | — (data layer) | `tests/integration/schema.test.ts` (20 constraint tests) |
 | Closed value sets | MON-001, QRY-003, QRY-005, D-024 | `pgEnum` types derived from `src/lib/domain-values.ts` | filter options | `tests/unit/domain-values.test.ts`; byte-identical regenerated migration |
 | Error handling | AUD-004, D-017 codes | — | error.tsx / not-found.tsx / inline errors | `tests/unit/error-codes.test.ts` |
-| Navigation & routing | D-012 | — | all routes | deep-link + 404 + back/forward tests |
+| Navigation & routing | D-012 | — | all routes | `tests/unit/url-state.test.ts` (URL state); `tests/integration/rendered-directory.test.ts`, `tests/integration/rendered-profile.test.ts` (deep links, 404) |
 | Deployment readiness | ENVIRONMENT.md | health query | `/api/health` | build + smoke/health |
 
 Do not treat this as bureaucracy. Its purpose is to answer: "If behavior changes here, what else must change?"

@@ -221,6 +221,42 @@ This is a lightweight decision register. Add an entry when a decision changes pr
 **Consequences:** The `Intl` string overload requires `"ES2023.Intl"` in the TypeScript `lib` setting. A malformed amount now throws rather than rendering, so the callers that build money strings must validate them first — which is where that check belongs.
 **Revisit when:** A currency needs a scale other than two (for example a per-unit price in a minor unit of 1/1000), which would need a per-currency scale rather than a fixed two.
 
+## D-027 — The application can run against a local PGlite database
+**Status:** accepted
+**Context:** The seed scripts already understood `PGLITE_PATH`, but the application itself could only start against Neon. A contributor without database credentials could run the test suites but not the application, so the directory and the profile could not be inspected in a browser before Phase 3.
+**Decision:** `src/db/client.ts` selects a PGlite instance when `PGLITE_PATH` is set and the Neon Pool otherwise. `DATABASE_URL` becomes optional when `PGLITE_PATH` is present. `@electric-sql/pglite` is added to `serverExternalPackages` in `next.config.ts`, because Turbopack otherwise rewrites PGlite's `path`/`fs` calls into a form Node rejects with `ERR_INVALID_ARG_TYPE`.
+**Alternatives considered:** (a) require Neon for local development — keeps one database target but makes every UI change depend on a credential the contributor may not have; (b) use an in-memory PostgreSQL server as a separate process — more moving parts than PGlite, which is already installed for the tests.
+**Why:** The application and the test suites now run against the same engine, so what a contributor sees locally is what the integration tests exercise. No schema, migration, or query changed: the same Drizzle schema and the same migrations run in both.
+**Consequences:** A local run is `PGLITE_PATH=… pnpm db:migrate && pnpm db:seed && PGLITE_PATH=… pnpm dev`. Production is unaffected and still uses Neon. The PGlite dependency is a development dependency; it is not deployed.
+**Revisit when:** The integration tests need a PostgreSQL feature PGlite does not implement — at which point the test target and the development target may have to diverge.
+
+## D-028 — Enum columns are sorted by their text value, not by their enum position
+**Status:** accepted
+**Context:** PostgreSQL orders an enum by the order its values were declared in the type. `country_code` is declared `US, IN, GB, DE, CA, AU`, so sorting the directory by country put US first and GB near the end. A reader clicking "Country" expects alphabetical order, and the first test written against the seeded cohort failed because of it. The same applies to `employment_status` and `work_mode`.
+**Decision:** Every enum sort column is cast to text in the `ORDER BY` clause: `asc(sql`${employees.countryCode}::text`)`. The cast happens in the query, not in the caller, so no caller can forget it.
+**Alternatives considered:** (a) sort by the declared enum order — deterministic, but it is not the order a reader expects and it changes whenever the enum is edited; (b) keep a separate text column for sorting — a second source of truth for the same value.
+**Why:** The cast is one expression in one place, and it makes the visible order match the label on the column header.
+**Consequences:** A reader sorting by country sees `AU, CA, DE, GB, IN, US`. The cast costs nothing at this table size, and the `switch` that maps sort values to columns means a new sort value cannot silently skip the cast.
+**Revisit when:** the workforce grows large enough for the sort to need an index — a functional index on `(country_code::text)` would then be worth measuring.
+
+## D-029 — The directory's state lives in the URL, and nothing else
+**Status:** accepted
+**Context:** The directory needs a search term, five filters, a sort, a page, and a reporting date. Holding them in React state makes the view unshareable, breaks the back button, and loses the state on a refresh. Holding them in a client-side store would need a state library, which the frozen architecture does not include.
+**Decision:** The URL query string is the single source of truth for the directory's state. `src/lib/url-state.ts` holds pure functions — `readQueryState`, `buildQueryString`, `applyQueryChange`, `clearFilters`, `hasActiveFilter` — and the server component reads the query string and renders one bounded page. The filters and the sort are links, not scripts, so the directory works without JavaScript and every state is keyboard-accessible.
+**Alternatives considered:** (a) React state — unshareable and lost on refresh; (b) a client-side store — a new dependency and a second source of truth for the same state; (c) the URL plus React state — two sources of truth that drift.
+**Why:** The URL is already the mechanism the product uses to carry a reporting date (RPT-003), so extending it to the rest of the state keeps one rule rather than two. A pure module also makes the transitions testable without a browser.
+**Consequences:** A filter change resets the page to 1 (QRY-006), because a page number is only meaningful relative to the result set that produced it. The URL is longer, which is the visible cost.
+**Revisit when:** a filter needs a value that does not fit a query string — a saved search, for example — which would need a server-side saved-search store.
+
+## D-030 — A page beyond the last page states so, and offers a way back
+**Status:** accepted
+**Context:** QRY-004 requires a page number beyond the last page to return an empty result with a safe navigation affordance, never an error. The first implementation fell through to the empty-state branch and told the reader "There are no employees to show — the workforce has not been loaded yet", which is a plain falsehood: the workforce was loaded and the filters matched, only the page number was out of range.
+**Decision:** The page distinguishes three empty cases. No rows **and** no filter means no data. No rows with a filter or a search means no match. No rows but a positive total means the page is past the end of the results, which is stated in those words, and the pager is still rendered. The pager drops the row range when it would run past the total, states the total alone, and its back link goes to the last page that has results rather than to the previous page number, which is also empty.
+**Alternatives considered:** (a) clamp the page number to the last page — silent, and it makes the reader's URL disagree with what is shown; (b) show a 404 — a page number is not a missing resource; (c) return an error — forbidden by QRY-004.
+**Why:** Each of the three cases needs a different response, and a reader who is told the wrong one loses trust in the whole directory.
+**Consequences:** The pager component takes the total into account when it builds its range, so the out-of-range case is handled once, in one place, and is covered by a test.
+**Revisit when:** the directory gains a result-set size large enough for a jump-to-page control, which would give the out-of-range reader a direct route to any page.
+
 ## Decision template
 ### D-XXX — Title
 **Status:** proposed / accepted / superseded

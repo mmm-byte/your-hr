@@ -26,6 +26,7 @@ Before adding a utility, search for an existing one and confirm at least two gen
 | `current-salary.ts` | As-of-date salary selection and future-effective labelling | SAL-007, SAL-008, RPT-001, RPT-002 |
 | `analytics.ts` | Median, average, and grouped counts over exact money | ANA-001…005, RPT-006, RPT-007 |
 | `employment.ts` | Hire/termination/status invariants | EMP-003…006, EMP-009, ELG-006 |
+| `url-state.ts` | The directory's URL state transitions, as pure functions | QRY-004, QRY-006, D-029 |
 | `actor.ts` | The fixed actor surrogate every mutation is attributed to | ACC-003 |
 | `error-codes.ts` | The stable error-code catalogue and its user-facing recoveries | D-017, AUD-004 |
 

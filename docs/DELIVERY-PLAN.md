@@ -255,6 +255,34 @@ found and fixed.
 **Gate 3:** `pnpm test && pnpm build` green; `/employees` renders 10,000 records server-side with
 verified pagination; profile shows the correct current salary for a past, present, and future reporting date.
 
+**Gate 3 — passed 2026-11-13.** Evidence:
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (19 files, 278 tests), `pnpm test:integration`
+  (8 files, 118 tests), `pnpm build` — all green.
+- The directory is rendered from the seeded 10,000-person cohort in PGlite.
+  `tests/integration/rendered-directory.test.ts` asserts the page links 25 profiles, not
+  10,000, so the browser never holds the workforce (ANA-007).
+- `tests/integration/current-salary.test.ts` covers the current salary for a past, present,
+  and future reporting date, and for a date exactly equal to an effective date (SAL-007).
+- The profile and the directory were inspected in a browser against the real cohort: the
+  reporting context, the identity grid, the salary history timeline, the not-found page, a
+  terminated employee, the empty and no-match states, and the 390px layout.
+
+Defects found and fixed during the gate — each is now covered by a test:
+
+| Defect | Rule | Fix |
+|---|---|---|
+| `formatDateLong` produced `Mar 1, 2026` while every example in the product copy uses `12 Nov 2026` | RPT-004 | The parts are formatted individually and joined, giving `1 Mar 2026` |
+| The profile repeated its own label: "Hired: Hired: 26 Feb 2026" | UI.md | `DateFact` carries no label; the `Fact` term is the label |
+| Raw ISO dates in the review and attrition copy (`2026-03-24`) | RPT-004 | Every date surface goes through `formatDateLong` |
+| The USD equivalent printed the currency twice: "$74,716.94 USD USD equivalent" | MON-005 | The amount is formatted without the code; the label names it |
+| A terminated employee's card read "Current as of 13 Nov 2026" for someone who left in 2021 | ELG-006 | `salaryCardAsOf` states the termination date and the wording together |
+| The location column was hidden below `md`, so a phone lost the location as well as the work mode | UI.md → Responsive priority | Location stays a column; the work mode moves into a row-details block |
+| `?page=999` claimed "the workforce has not been loaded yet" | QRY-004 | The page states that it is past the end and keeps a pager |
+| The pager printed "Page 999 of 400" and a range running past the total | QRY-004 | The range is dropped and the back link goes to the last page with results |
+| PostgreSQL sorted the country enum by declaration order, not alphabetically | QRY-005 | Enum sort columns are cast to text |
+| `applyQueryChange` ignored the `page` key, so a page change was never applied | QRY-004 | The key is handled like every other one |
+
 ---
 
 ### Phase 4 — Salary revision (the critical mutation)
@@ -552,13 +580,17 @@ Two structural changes were also made:
   (default 25, cap 100, clamped rather than rejected), allow-listed sorts and groupings,
   and no silent coercion (D-025).
 
-**Phase 3 — next.** The first vertical slice: the employee directory and profile.
+**Phase 3 — done.** The first vertical slice: the employee directory and profile. Gate 3 passed
+2026-11-13; see the Gate 3 section above for the evidence and the defects that were found and
+fixed while proving it.
 
-1. `src/db/queries/employees.ts` — server-side search/filter/sort/pagination over 10,000 rows (QRY-001…007, ANA-007).
-2. `src/db/queries/current-salary.ts` — as-of-date query joining employees → salary_records (SAL-007, RPT-001).
-3. `/employees` and `/employees/[employeeId]` — the directory and the profile, with loading, empty, error, and not-found states.
-4. `ReportingDatePicker` — the shared reporting-date control, carried in the URL as `?asOf=YYYY-MM-DD` (RPT-003).
-5. Prove Gate 3 — the reviewer can find an employee and understand them — then push.
+**Phase 4 — next.** The salary revision: the critical mutation path.
+
+1. `src/server/salary-revision.ts` — the server action, the Zod boundary, and the transaction that writes `salary_records` and `audit_events` together (SAL-010, AUD-001).
+2. Optimistic concurrency — the request carries `expectedVersion`; the server rejects a stale write with a conflict rather than overwriting it (SAL-011, CON-001).
+3. `/employees/[employeeId]/revise-salary` — the form, with the eligibility gate (ELG-001…ELG-005) and the pending, success, validation-error, and conflict states (UI.md → States required on data surfaces).
+4. The revision surface is **absent** for an employee who is not eligible, not merely disabled (ELG-005).
+5. Prove Gate 4 — a revision changes the current salary, leaves the history append-only, and writes one audit row — then push.
 
 **Open items requiring your decision (not blocking — the recommended default will be used):**
 
