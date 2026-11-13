@@ -53,7 +53,11 @@ Indexes: `(employee_id, effective_from DESC)` and fields justified by measured a
 > into a JavaScript `number`.
 >
 > **Date precision (RPT-004).** `effective_from`, `hire_date`, and `termination_date` are `date`, not
-> `timestamptz`. A date-only value must not shift across time zones.
+> `timestamptz`. A date-only value must not shift across time zones. The column type alone does
+> not guarantee this: Neon's built-in parser decodes `date` into a `Date` at *local* midnight,
+> so a server east of UTC would lose a day. The application pool, the operational scripts, and
+> the PGlite test database therefore all use the shared parser in `src/db/date-parsers.ts`,
+> which returns the raw `YYYY-MM-DD` text (D-021). Any new connection path must use it too.
 
 ### `absence_records`
 - `id`, `employee_id` FK

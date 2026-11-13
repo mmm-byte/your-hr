@@ -1,7 +1,7 @@
 # Your HR — Delivery Plan (Base to Top)
 
 **Purpose:** the build order, the gate each phase must pass, and the exact commands that prove it.
-**Status:** Phase 0 complete (2026-11-12) · Phase 1 next — schema, migrations, seed.
+**Status:** Phase 0 complete (2026-11-12) · Phase 1 complete (2026-11-13) · Phase 2 next — domain core.
 **Owner:** engineer. AI proposes and implements; every claim below is verified by a command, not by assertion.
 
 This plan sequences work bottom-up so that every later phase inherits something already proven.
@@ -141,7 +141,7 @@ A smoke check confirms the shell renders with nav, notice, and a 404 page.
 
 ---
 
-### Phase 1 — Schema, migrations, deterministic seed
+### Phase 1 — Schema, migrations, deterministic seed ✅
 **Goal:** the 10,000-person cohort exists, verified, and reproducible.
 
 | # | Work | Rules |
@@ -186,6 +186,26 @@ A smoke check confirms the shell renders with nav, notice, and a 404 page.
 
 **Gate 1:** `pnpm db:generate && pnpm db:migrate && pnpm db:seed && pnpm db:verify` green on PGlite;
 seed run twice is safe; `db:verify` exits non-zero on any injected violation.
+
+**Gate 1 — passed 2026-11-13.** `pnpm db:generate` reports no schema drift;
+`pnpm db:migrate` applies `0000_sloppy_frog_thor.sql` and skips it on a second run;
+`pnpm db:seed` writes 10,000 employees, 22,093 salary rows, 5,418 absence summaries,
+10,000 reviews, and 4,278 attrition events, and refuses a second run with
+*"The target already contains 10000 employees."*; `pnpm db:verify` reports **29/29**
+checks passed. The gate was proven by injection: moving one salary record to a day
+before its employee's hire date turned the run to **28/29 with exit code 1**.
+
+Alongside the gate: `pnpm lint`, `pnpm typecheck`, `pnpm test` (11 files, 154 tests),
+`pnpm test:integration` (3 files, 38 tests), and `pnpm build` are all green.
+
+> **One defect found and fixed during the gate.** The seed's SAL-007 assertion failed
+> because a `date` column read back as the **previous** calendar day. Neon's parser builds
+> a `Date` at *local* midnight and Drizzle re-slices it in UTC, so any deployment east
+> of UTC would have lost a day on every reported date — invisible in the tests, because
+> PGlite decodes `date` as UTC midnight and was already correct. Fixed by a custom type
+> parser for OID 1082 that returns the raw `YYYY-MM-DD` text (D-021), applied to the
+> application pool, the scripts, and the test database alike. A regression test runs a
+> probe under six timezones and fails if the configuration is removed.
 
 ---
 
@@ -498,15 +518,21 @@ with a smoke check confirming the shell renders, the assessment notice is presen
 the 404 page works, and `/api/health` returns a safe degraded payload when no
 database is reachable.
 
-**Phase 1 — next.** Schema, migrations, and the deterministic seed.
+**Phase 1 — complete.** Gate 1 passed on 2026-11-13: `pnpm db:generate` (no drift),
+`pnpm db:migrate`, `pnpm db:seed` (10,000 employees, 22,093 salary rows), and
+`pnpm db:verify` (**29/29 checks passed**, exit code 1 on an injected violation).
+The seed refuses a rerun and the migration runner skips applied files, so both are
+safe to repeat. `pnpm lint`, `pnpm typecheck`, `pnpm test` (11 files, 154 tests),
+`pnpm test:integration` (3 files, 38 tests), and `pnpm build` are green.
 
-1. Free disk space (B3) — prune the pnpm store, remove the redundant `SalaryLens` backup once confirmed.
-2. Drizzle schema for the eight tables in [DATABASE.md](DATABASE.md) with the documented constraints.
-3. `drizzle-kit generate` and commit the migrations.
-4. Deterministic seed from the CSV dataset, chunked and resumable.
-5. `db:verify` — counts, uniqueness, orphans, date ranges, currency alignment.
-6. Integration tests against PGlite using the same generated SQL.
-7. Prove Gate 1, then push.
+**Phase 2 — next.** Domain core: pure, fast, deterministic rules with no I/O.
+
+1. `src/lib/salary-rules.ts` — revision validation and eligibility (SAL-002…009, SAL-012, ELG-001…004).
+2. `src/lib/current-salary.ts` — as-of-date selection and future-effective labelling (SAL-007, SAL-008, RPT-001, RPT-004).
+3. `src/lib/analytics.ts` — median with correct even/odd handling; empty ≠ zero (ANA-003, ANA-004).
+4. `src/lib/employment.ts` — hire/termination/status invariants (EMP-003…006).
+5. Extend `src/lib/money.ts` and `src/lib/date-only.ts` only where a rule is missing.
+6. Prove Gate 2 — every rule has a unit test and no module performs I/O — then push.
 
 **Open items requiring your decision (not blocking — the recommended default will be used):**
 

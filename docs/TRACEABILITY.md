@@ -16,6 +16,9 @@ This matrix prevents drift between product, UI, database, and tests. Update it a
 | Data quality | dataset invariants | verification queries | `/data-quality` | deterministic issue classification |
 | Access model | ACC-001…004 | — | global shell + assessment notice | `tests/unit/error-codes.test.ts`; actor surrogate is `src/lib/actor.ts` (Phase 2 test) |
 | Reporting date | RPT-001…004 | as-of queries | all money surfaces | `tests/unit/date-only.test.ts`, `tests/unit/current-salary.test.ts` |
+| Date-only storage & decoding | RPT-004, D-021 | `date` columns via OID-1082 driver parser | every date surface | `tests/unit/date-parsers.test.ts`, `tests/integration/date-parsers.test.ts` (six timezones) |
+| Seeded cohort | SEED-001…004, SAL-001/004/006, EMP-007, MON-002 | employees, salary_records, absence_records, performance_reviews, attrition_events | directory, profile, analytics | `tests/integration/seed.test.ts`, `tests/unit/seed-dataset.test.ts`, `pnpm db:verify` (29 checks) |
+| Database invariants | SAL-002/003/006, EMP-002/004/005/006, MON-002, ABS-*, PERF-* | 8 tables, pgEnum types, CHECK/UNIQUE/index definitions | — (data layer) | `tests/integration/schema.test.ts` (20 constraint tests) |
 | Error handling | AUD-004, D-017 codes | — | error.tsx / not-found.tsx / inline errors | `tests/unit/error-codes.test.ts` |
 | Navigation & routing | D-012 | — | all routes | deep-link + 404 + back/forward tests |
 | Deployment readiness | ENVIRONMENT.md | health query | `/api/health` | build + smoke/health |

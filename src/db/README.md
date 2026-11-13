@@ -4,6 +4,7 @@
 - connection creation
 - Drizzle schema
 - migrations configuration
+- driver type parsers
 - focused queries/repositories
 - transaction helpers
 
@@ -19,6 +20,9 @@
 - Parameterized access only.
 - Focused projections and measured indexes.
 - Salary + audit writes are transactional.
+- `date` columns are decoded by the shared parser in `date-parsers.ts` (D-021).
+  The application pool, the operational scripts, and the PGlite test database
+  must all use it, so the tests exercise the representation production receives.
 
 ## Relationship comment
 Each non-trivial query documents callers, tables/indexes used, domain rules, and integration tests.

@@ -4,8 +4,12 @@ name: CI
 # install -> lint -> typecheck -> test -> build.
 #
 # The job is split so a failure names the broken gate instead of collapsing
-# into one red step. Later phases add `test:integration` and `test:e2e` as
-# their own steps (they need PGlite and a seeded database respectively).
+# into one red step. `test:integration` was added in Phase 1 because the
+# database behaviour — the schema constraints, the seeded cohort, and the
+# timezone-safe date decoding — is now protected by tests that must run on
+# every push. It needs no database server: PGlite is real PostgreSQL in
+# WebAssembly (D-009). `test:e2e` arrives with the first UI slice in Phase 3,
+# because it needs a seeded database and a running server.
 
 on:
   push:
@@ -61,6 +65,9 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Test (integration, PGlite)
+        run: pnpm test:integration
 
       - name: Build
         run: pnpm build
