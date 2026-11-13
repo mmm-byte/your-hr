@@ -104,13 +104,37 @@ describe('the seeded workforce', () => {
     expect(first.rows.map((row) => row.id)).toEqual(second.rows.map((row) => row.id));
   });
 
-  it('sorts by salary without a null salary breaking the order', async () => {
+  it('sorts by salary on the USD equivalent, not on the local amount', async () => {
+    // The workforce is paid in six currencies. The local amounts are not
+    // comparable, so the order must come from the USD equivalent — the one
+    // basis every record shares (MON-004, RPT-007).
     const result = await query({ sort: 'salary' });
-    const amounts = result.rows
-      .map((row) => row.currentBaseSalary)
+
+    const equivalents = result.rows
+      .map((row) => row.currentUsdEquivalent)
       .filter((amount): amount is string => amount !== null);
-    const descending = [...amounts].sort((a, b) => Number(b) - Number(a));
-    expect(amounts).toEqual(descending);
+
+    expect(equivalents).toHaveLength(result.rows.length);
+    expect(equivalents).toEqual([...equivalents].sort((a, b) => Number(b) - Number(a)));
+  });
+
+  it('shows the local amount, not the USD equivalent, in the salary column', async () => {
+    // The sort uses the USD equivalent; the reader still sees their own
+    // currency. The two must not be confused with each other.
+    const result = await query({ sort: 'salary' });
+    const withBoth = result.rows.filter(
+      (row) => row.currentBaseSalary !== null && row.currentUsdEquivalent !== null,
+    );
+
+    expect(withBoth.length).toBeGreaterThan(0);
+    for (const row of withBoth) {
+      // At least one row is not in USD, so its local amount must differ from
+      // its USD equivalent.
+      if (row.currentCurrencyCode !== 'USD') {
+        expect(row.currentBaseSalary).not.toBe(row.currentUsdEquivalent);
+        break;
+      }
+    }
   });
 
   it('returns an empty result with the real total for a page past the end', async () => {

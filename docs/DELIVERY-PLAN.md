@@ -280,6 +280,7 @@ Defects found and fixed during the gate — each is now covered by a test:
 | The location column was hidden below `md`, so a phone lost the location as well as the work mode | UI.md → Responsive priority | Location stays a column; the work mode moves into a row-details block |
 | `?page=999` claimed "the workforce has not been loaded yet" | QRY-004 | The page states that it is past the end and keeps a pager |
 | The pager printed "Page 999 of 400" and a range running past the total | QRY-004 | The range is dropped and the back link goes to the last page with results |
+| The salary sort compared six currencies as one number, so "highest salary" was an artefact of the currency mix | MON-004, RPT-007 | The sort uses `usd_equivalent`, the basis every record shares, and the table states the basis (D-031) |
 | PostgreSQL sorted the country enum by declaration order, not alphabetically | QRY-005 | Enum sort columns are cast to text |
 | `applyQueryChange` ignored the `page` key, so a page change was never applied | QRY-004 | The key is handled like every other one |
 

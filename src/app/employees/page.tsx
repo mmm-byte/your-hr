@@ -192,23 +192,31 @@ function EmployeeTable({
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      rows={result.rows}
-      rowKey={(row) => row.id}
-      rowHref={(row) => `/employees/${row.id}` as Route}
-      caption="Employees matching the current search and filters"
-      sort={sort}
-      sortHref={(sortValue) =>
-        directoryHref(buildQueryString({ ...state, sort: sortValue, page: '1' }))
-      }
-      emptyState={
-        <EmptyState
-          title="No employees match these filters"
-          description="Try clearing a filter or searching for a different name."
-        />
-      }
-    />
+    <>
+      <DataTable
+        columns={columns}
+        rows={result.rows}
+        rowKey={(row) => row.id}
+        rowHref={(row) => `/employees/${row.id}` as Route}
+        caption="Employees matching the current search and filters"
+        sort={sort}
+        sortHref={(sortValue) =>
+          directoryHref(buildQueryString({ ...state, sort: sortValue, page: '1' }))
+        }
+        emptyState={
+          <EmptyState
+            title="No employees match these filters"
+            description="Try clearing a filter or searching for a different name."
+          />
+        }
+      />
+      {sort === 'salary' ? (
+        <p className="text-xs text-muted-foreground">
+          Sorted by the synthetic USD equivalent, so salaries in different currencies are
+          compared on one basis. Each row still shows the local amount and its own currency.
+        </p>
+      ) : null}
+    </>
   );
 }
 

@@ -151,12 +151,13 @@ async function seedSalary(
   baseSalary: string,
   currencyCode: string,
   bonusPct = '0.00',
+  usdEquivalent: string | null = null,
 ): Promise<void> {
   await pglite.query(
     `insert into salary_records
-       (employee_id, effective_from, base_salary, bonus_pct, currency_code)
-     values ($1, $2, $3, $4, $5)`,
-    [employeeId, effectiveFrom, baseSalary, bonusPct, currencyCode],
+       (employee_id, effective_from, base_salary, bonus_pct, currency_code, usd_equivalent)
+     values ($1, $2, $3, $4, $5, $6)`,
+    [employeeId, effectiveFrom, baseSalary, bonusPct, currencyCode, usdEquivalent],
   );
 }
 
@@ -368,6 +369,23 @@ describe('sorting (QRY-005)', () => {
     const unknown = await query({ sort: 'bogus' });
     const fallback = await query({});
     expect(unknown.rows.map((row) => row.id)).toEqual(fallback.rows.map((row) => row.id));
+  });
+
+  it('sorts by salary on one comparable basis across currencies', async () => {
+    // The workforce is paid in six currencies. Sorting by the local amount
+    // would compare ₹96,05,289 with $74,716 as though they were the same
+    // unit, so the order would be an artefact of the currency mix. The
+    // USD equivalent is the one basis every record shares.
+    await pglite.query(`delete from salary_records`);
+    await seedSalary(1, '2020-01-01', '9600000.00', 'INR', '0.00', '90000.00');
+    await seedSalary(2, '2020-01-01', '74000.00', 'USD', '0.00', '74000.00');
+    await seedSalary(3, '2020-01-01', '50000.00', 'GBP', '0.00', '62000.00');
+    await seedSalary(42, '2020-01-01', '30000.00', 'EUR', '0.00', '33000.00');
+
+    const result = await query({ sort: 'salary' });
+
+    // 90000, 74000, 62000, 33000 — descending by the USD equivalent.
+    expect(result.rows.map((row) => row.id)).toEqual([1, 2, 3, 42]);
   });
 
   it('keeps a stable order across pages', async () => {

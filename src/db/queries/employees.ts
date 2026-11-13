@@ -81,6 +81,13 @@ export interface DirectoryRow {
   readonly currentBonusPct: string | null;
   readonly currentCurrencyCode: string | null;
   readonly currentEffectiveFrom: DateOnly | null;
+  /**
+   * The current salary's synthetic USD equivalent.
+   *
+   * This is the basis the salary sort uses, because the local amounts are in
+   * six currencies and are not comparable with each other (MON-004, RPT-007).
+   */
+  readonly currentUsdEquivalent: string | null;
 }
 
 /** The directory result: this page's rows, plus everything the pager needs. */
@@ -113,6 +120,14 @@ export interface DirectoryResult {
  * enum would put US first and GB last. A reader clicking "Country" expects
  * alphabetical order, so the column is cast to text first. The same applies
  * to `employment_status` and `work_mode`.
+ *
+ * **The salary sort uses the USD equivalent, not the local amount.** The
+ * workforce is paid in six currencies, so ordering by `base_salary` would
+ * compare ₹96,05,289 with $74,716 as though they were the same unit — the
+ * order would be an artefact of the currency mix rather than of the
+ * salaries. `usd_equivalent` is the synthetic amount every record carries
+ * (MON-004, RPT-007), so the order is comparable. It is still the *local*
+ * amount that is displayed, with its own currency code.
  */
 function sortColumns(sort: EmployeeDirectorySort): SQL[] {
   switch (sort) {
@@ -123,7 +138,7 @@ function sortColumns(sort: EmployeeDirectorySort): SQL[] {
     case 'country':
       return [asc(sql`${employees.countryCode}::text`), asc(employees.id)];
     case 'salary':
-      return [desc(salaryRecords.baseSalary), asc(employees.id)];
+      return [desc(salaryRecords.usdEquivalent), asc(employees.id)];
     case 'workMode':
       return [asc(sql`${employees.workMode}::text`), asc(employees.id)];
     case 'employee':
@@ -251,6 +266,7 @@ export async function queryEmployeeDirectory(
       currentBonusPct: salaryRecords.bonusPct,
       currentCurrencyCode: salaryRecords.currencyCode,
       currentEffectiveFrom: salaryRecords.effectiveFrom,
+      currentUsdEquivalent: salaryRecords.usdEquivalent,
     })
     .from(employees)
     .innerJoin(departments, eq(employees.departmentId, departments.id))

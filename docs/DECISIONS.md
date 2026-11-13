@@ -257,6 +257,16 @@ This is a lightweight decision register. Add an entry when a decision changes pr
 **Consequences:** The pager component takes the total into account when it builds its range, so the out-of-range case is handled once, in one place, and is covered by a test.
 **Revisit when:** the directory gains a result-set size large enough for a jump-to-page control, which would give the out-of-range reader a direct route to any page.
 
+## D-031 — The salary sort uses the USD equivalent, and says so
+**Status:** accepted
+**Context:** The workforce is paid in six currencies. The directory sorted the salary column by `base_salary`, which compares ₹96,05,289 with $74,716 as though they were the same unit. On the seeded cohort the two orderings diverge at the very first row: the local-amount sort put the Indian employees at the top of a "highest salary" list, and the USD-equivalent sort put the American ones there. The order was an artefact of the currency mix, not of the salaries.
+**Decision:** The salary sort uses `salary_records.usd_equivalent`, the synthetic amount every record already carries (MON-004). Each row still displays the **local** amount with its own currency code, and the table states the basis of the sort in a note while that sort is active. The directory's query projection now also returns `currentUsdEquivalent`.
+**Alternatives considered:** (a) keep sorting by the local amount and label the column as mixed — honest about the data but not useful, because the reader still cannot tell who earns more; (b) sort by the local amount only within a currency and refuse to compare across currencies — correct but not what a single sortable column can express, and it would need a second control; (c) add a reporting-currency column — a schema change for a display concern, when the equivalent already exists.
+**Why:** `usd_equivalent` is the one basis every record shares, and the seed populates it for all 22,093 salary rows, so the sort needs no new data and no new policy.
+**Consequences:** The sort is comparable across currencies. A reader who wants the local order can filter to one currency. The note under the table is shown only while the salary sort is active, so the common case is not cluttered.
+**Revisit when:** the seed stops populating `usd_equivalent` for some records, which would leave the sort with nulls and no total order.
+
+
 ## Decision template
 ### D-XXX — Title
 **Status:** proposed / accepted / superseded
