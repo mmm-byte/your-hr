@@ -1,0 +1,10 @@
+check,count,status
+master_row_count,10000,PASS
+unique_employee_ids,10000,PASS
+duplicate_employee_ids,0,PASS
+missing_country,0,PASS
+missing_branch,0,PASS
+missing_current_salary,0,PASS
+nonpositive_local_salary,0,PASS
+currency_country_mismatch,0,PASS
+duplicate_salary_effective_dates,0,PASS
