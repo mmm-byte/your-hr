@@ -244,6 +244,11 @@ describe('PageSizeSelect', () => {
     expect(navigations).toHaveLength(1);
     expect(navigations[0]?.href).toContain('pageSize=50');
     expect(navigations[0]?.href).toContain('page=1');
+
+    // `replace`, not `push`: changing a filter rewrites the current view
+    // rather than adding a history entry, so the back button returns to the
+    // previous page rather than through every filter the reader tried.
+    expect(navigations[0]?.method).toBe('replace');
   });
 });
 

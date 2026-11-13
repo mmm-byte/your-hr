@@ -37,7 +37,10 @@ export function PageSizeSelect({
   function choose(size: number): void {
     const state = readQueryState(searchParams);
     const query = buildQueryString(applyQueryChange(state, { pageSize: String(size) }));
-    router.push(`${basePath}${query}` as Route, { scroll: false });
+    // `replace`, not `push`: changing a filter rewrites the current view
+    // rather than adding a history entry, so the back button returns to the
+    // previous page rather than through every filter the reader tried.
+    router.replace(`${basePath}${query}` as Route, { scroll: false });
   }
 
   return (

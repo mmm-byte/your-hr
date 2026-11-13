@@ -15,16 +15,16 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
 /** The navigations the component under test requested, in order. */
-export const navigations: { href: string; options: unknown }[] = [];
+export const navigations: { href: string; method: 'push' | 'replace'; options: unknown }[] = [];
 
-const record = (href: string, options?: unknown) => {
-  navigations.push({ href, options });
+const record = (method: 'push' | 'replace') => (href: string, options?: unknown) => {
+  navigations.push({ href, method, options });
 };
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(record),
-    replace: vi.fn(record),
+    push: vi.fn(record('push')),
+    replace: vi.fn(record('replace')),
     back: vi.fn(),
     forward: vi.fn(),
     refresh: vi.fn(),
