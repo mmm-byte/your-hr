@@ -43,6 +43,15 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import {
+  ATTRITION_REASONS,
+  COUNTRY_CODES,
+  CURRENCY_CODES,
+  EMPLOYMENT_STATUSES,
+  GENDERS,
+  LOCALIZATION_METHODS,
+  WORK_MODES,
+} from '@/lib/domain-values';
 
 /**
  * Closed value sets, declared once as PostgreSQL enums.
@@ -54,38 +63,38 @@ import { sql } from 'drizzle-orm';
  * `CREATE TYPE ... AS ENUM`, so the database enforces the value set, the
  * migration is portable, and the TypeScript column type is narrowed to the
  * allowed values at the same time.
+ *
+ * The values come from `src/lib/domain-values.ts` so the database enums and
+ * the Zod request allow-lists cannot drift apart (D-024). Drizzle copies the
+ * array it is handed, so the tuple stays immutable and the generated
+ * `CREATE TYPE` keeps the original value order.
  */
-export const employmentStatusEnum = pgEnum('employment_status', [
-  'active',
-  'on_leave',
-  'terminated',
-]);
-export const workModeEnum = pgEnum('work_mode', ['remote', 'hybrid', 'office']);
-export const genderEnum = pgEnum('gender', ['Female', 'Male', 'Non-binary']);
-export const currencyCodeEnum = pgEnum('currency_code', ['USD', 'INR', 'GBP', 'EUR', 'CAD', 'AUD']);
-export const countryCodeEnum = pgEnum('country_code', ['US', 'IN', 'GB', 'DE', 'CA', 'AU']);
-export const localizationMethodEnum = pgEnum('localization_method', ['synthetic_geo_factor_v1']);
-export const attritionReasonEnum = pgEnum('attrition_reason', [
-  'better_offer',
-  'career_change',
-  'relocation',
-  'personal',
-  'performance',
-  'redundancy',
-  'retirement',
-]);
+export const employmentStatusEnum = pgEnum('employment_status', EMPLOYMENT_STATUSES);
+export const workModeEnum = pgEnum('work_mode', WORK_MODES);
+export const genderEnum = pgEnum('gender', GENDERS);
+export const currencyCodeEnum = pgEnum('currency_code', CURRENCY_CODES);
+export const countryCodeEnum = pgEnum('country_code', COUNTRY_CODES);
+export const localizationMethodEnum = pgEnum('localization_method', LOCALIZATION_METHODS);
+export const attritionReasonEnum = pgEnum('attrition_reason', ATTRITION_REASONS);
 
-/** The closed value sets, exported for the seed and for test factories. */
-export const EMPLOYMENT_STATUSES = employmentStatusEnum.enumValues;
-export const WORK_MODES = workModeEnum.enumValues;
-export const GENDERS = genderEnum.enumValues;
-export const CURRENCY_CODES = currencyCodeEnum.enumValues;
-export const COUNTRY_CODES = countryCodeEnum.enumValues;
-export const LOCALIZATION_METHODS = localizationMethodEnum.enumValues;
-export const ATTRITION_REASONS = attritionReasonEnum.enumValues;
-
-/** Job levels present in the approved cohort. */
-export const JOB_LEVELS = [1, 2, 3, 4, 5, 6, 7] as const;
+/**
+ * The closed value sets live in `src/lib/domain-values.ts` so the database
+ * enums and the Zod request allow-lists cannot drift (D-024). They are
+ * re-exported here because `src/db/schema.ts` is the public face of the
+ * database shape.
+ */
+export {
+  ATTRITION_REASONS,
+  BRANCH_CODES,
+  COUNTRY_CODES,
+  CURRENCY_CODES,
+  DEPARTMENT_NAMES,
+  EMPLOYMENT_STATUSES,
+  GENDERS,
+  JOB_LEVELS,
+  LOCALIZATION_METHODS,
+  WORK_MODES,
+} from '@/lib/domain-values';
 
 /**
  * Departments — the 40 functional groupings in the cohort.
