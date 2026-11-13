@@ -10,7 +10,6 @@
  * - Database numeric storage (tests/integration/schema.integration.test.ts)
  */
 import { describe, expect, it } from 'vitest';
-import { aggregateByCurrency, averageMoney, medianMoney } from '@/lib/analytics';
 import {
   addMoney,
   compareMoney,
@@ -39,12 +38,29 @@ describe('toMinorUnits', () => {
     expect(() => toMinorUnits('')).toThrow();
     expect(() => toMinorUnits('12.3.4')).toThrow();
   });
+
+  it('rejects a third decimal place rather than truncating it', () => {
+    // The column is numeric(12,2): a third decimal is a precision the system
+    // cannot represent, so dropping it silently would change the amount.
+    expect(() => toMinorUnits('1.234')).toThrow(/more than two decimal places/);
+    expect(() => toMinorUnits('0.005')).toThrow(/more than two decimal places/);
+  });
+
+  it('accepts a negative amount', () => {
+    expect(toMinorUnits('-54206.05')).toBe(-5_420_605n);
+    expect(toMinorUnits('-0.01')).toBe(-1n);
+  });
 });
 
 describe('fromMinorUnits', () => {
   it('round-trips exactly', () => {
     expect(fromMinorUnits(toMinorUnits('54206.05'))).toBe('54206.05');
     expect(fromMinorUnits(toMinorUnits('123456789.12'))).toBe('123456789.12');
+  });
+
+  it('round-trips a negative amount without losing the sign', () => {
+    expect(fromMinorUnits(toMinorUnits('-54206.05'))).toBe('-54206.05');
+    expect(fromMinorUnits(toMinorUnits('-0.01'))).toBe('-0.01');
   });
 });
 
@@ -75,45 +91,6 @@ describe('subtractMoney and compareMoney', () => {
   });
 });
 
-describe('medianMoney', () => {
-  it('returns null for an empty set rather than zero', () => {
-    expect(medianMoney([])).toBeNull();
-  });
-
-  it('returns the middle value for an odd-length set', () => {
-    expect(medianMoney(['10.00', '20.00', '30.00'])).toBe('20.00');
-  });
-
-  it('averages the two middle values for an even-length set', () => {
-    expect(medianMoney(['10.00', '20.00', '30.00', '40.00'])).toBe('25.00');
-  });
-
-  it('rounds a half-cent median to the nearest cent', () => {
-    // 0.01 and 0.02 average to 0.015, which must become 0.02, not 0.01.
-    expect(medianMoney(['0.01', '0.02'])).toBe('0.02');
-  });
-
-  it('is unaffected by the input order', () => {
-    expect(medianMoney(['40.00', '10.00', '30.00', '20.00'])).toBe('25.00');
-  });
-});
-
-describe('averageMoney', () => {
-  it('returns null for an empty set', () => {
-    expect(averageMoney([])).toBeNull();
-  });
-
-  it('divides exactly where floating point drifts', () => {
-    expect(averageMoney(['0.10', '0.20'])).toBe('0.15');
-    expect(averageMoney(['10.00', '20.00', '30.00'])).toBe('20.00');
-  });
-
-  it('stays exact across many values', () => {
-    const amounts = Array.from({ length: 10_000 }, () => '0.01');
-    expect(averageMoney(amounts)).toBe('0.01');
-  });
-});
-
 describe('formatMoney', () => {
   it('includes the ISO currency code so the value is unambiguous', () => {
     const formatted = formatMoney('54206.05', 'USD');
@@ -128,6 +105,18 @@ describe('formatMoney', () => {
 
   it('can omit the code when the context already makes it obvious', () => {
     expect(formatMoney('54206.05', 'USD', { includeCode: false })).not.toContain('USD');
+  });
+
+  it('keeps every digit of an amount that a float could not represent', () => {
+    // 90071992547409.93 is not exactly representable as a JavaScript number:
+    // Number('90071992547409.93') is 90071992547409.94.
+    expect(formatMoney('90071992547409.93', 'USD')).toContain('90,071,992,547,409.93');
+  });
+
+  it('rejects a malformed amount instead of rendering NaN', () => {
+    expect(() => formatMoney('abc', 'USD')).toThrow(/Invalid money value/);
+    expect(() => formatMoney('1,000', 'USD')).toThrow(/Invalid money value/);
+    expect(() => formatMoney('1.234', 'USD')).toThrow(/Invalid money value/);
   });
 });
 
@@ -147,26 +136,24 @@ describe('groupByCurrency', () => {
 
 describe('totalSameCurrency', () => {
   it('totals amounts that share a currency', () => {
-    expect(totalSameCurrency(['100.00', '200.50'])).toBe('300.50');
-  });
-});
-
-describe('aggregateByCurrency', () => {
-  it('produces an empty aggregate for no data, not a zero aggregate', () => {
-    const aggregate = aggregateByCurrency('USD', []);
-    expect(aggregate.count).toBe(0);
-    expect(aggregate.median).toBeNull();
-    expect(aggregate.average).toBeNull();
-    expect(aggregate.minimum).toBeNull();
-    expect(aggregate.maximum).toBeNull();
+    expect(
+      totalSameCurrency([
+        { amount: '100.00', currency: 'USD' },
+        { amount: '200.50', currency: 'USD' },
+      ]),
+    ).toBe('300.50');
   });
 
-  it('summarises a currency group', () => {
-    const aggregate = aggregateByCurrency('EUR', ['100.00', '200.00', '300.00']);
-    expect(aggregate.count).toBe(3);
-    expect(aggregate.median).toBe('200.00');
-    expect(aggregate.average).toBe('200.00');
-    expect(aggregate.minimum).toBe('100.00');
-    expect(aggregate.maximum).toBe('300.00');
+  it('refuses to total across currencies', () => {
+    expect(() =>
+      totalSameCurrency([
+        { amount: '100.00', currency: 'USD' },
+        { amount: '200.50', currency: 'EUR' },
+      ]),
+    ).toThrow(/across currencies/);
+  });
+
+  it('totals an empty group to zero', () => {
+    expect(totalSameCurrency([])).toBe('0.00');
   });
 });

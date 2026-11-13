@@ -13,8 +13,9 @@
  */
 
 import { compareDateOnly, daysBetween, type DateOnly } from './date-only';
+import type { EmploymentStatus } from './domain-values';
 
-export type EmploymentStatus = 'active' | 'on_leave' | 'terminated';
+export type { EmploymentStatus };
 
 export interface EmploymentFacts {
   readonly hireDate: DateOnly;

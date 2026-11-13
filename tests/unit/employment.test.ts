@@ -143,6 +143,32 @@ describe('salaryCardLabel', () => {
       }),
     ).toBe('Current salary');
   });
+
+  it('calls an on-leave employee salary current', () => {
+    expect(
+      salaryCardLabel({
+        hireDate: '2020-01-15',
+        terminationDate: null,
+        employmentStatus: 'on_leave',
+      }),
+    ).toBe('Current salary');
+  });
+
+  it('labels a terminated employee differently from an employed one', () => {
+    // ELG-006: the salary stays inspectable, but it is labelled as the salary
+    // effective as of termination — never as the current salary.
+    const terminated = salaryCardLabel({
+      hireDate: '2020-01-15',
+      terminationDate: '2024-06-30',
+      employmentStatus: 'terminated',
+    });
+    const employed = salaryCardLabel({
+      hireDate: '2020-01-15',
+      terminationDate: null,
+      employmentStatus: 'active',
+    });
+    expect(terminated).not.toBe(employed);
+  });
 });
 
 describe('yearsOfService', () => {

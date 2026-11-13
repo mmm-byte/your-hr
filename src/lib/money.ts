@@ -11,6 +11,14 @@
  * percentage change), is done on `BigInt` minor units — integers, therefore
  * exact.
  *
+ * Two money representations are deliberately **not** interchangeable:
+ *
+ * - `toMinorUnits` / `fromMinorUnits` operate on a *money* amount. They reject
+ *   more than two fraction digits, because a salary is stored at a fixed scale
+ *   and a third decimal cannot be represented (MON-002).
+ * - `formatMoney` operates on the same exact string but hands it to
+ *   `Intl.NumberFormat` as a string, so no float ever touches the digits.
+ *
  * Called by: the salary revision validation, the compensation and analytics
  * queries, and the `MoneyDisplay` component.
  * Rules: MON-001, MON-002, MON-003, MON-004, MON-005, MON-006, RPT-005, RPT-006.
@@ -56,16 +64,27 @@ export function isSupportedCurrency(value: unknown): value is CurrencyCode {
  * so a value with no decimal point (`'50000'`) is treated as whole units rather
  * than being silently rescaled.
  *
- * @throws if the value is not a well-formed non-negative decimal string.
+ * A leading `-` is accepted, so this function and `fromMinorUnits` are true
+ * inverses: a negative amount can be parsed and re-emitted without changing.
+ *
+ * @throws if the value is not a well-formed decimal string, or if it carries
+ *   more than two fraction digits. Money is stored at a fixed scale
+ *   (`numeric(12,2)`), so a third decimal digit is a precision the system
+ *   cannot represent — silently truncating it would change the amount
+ *   (MON-002).
  */
 export function toMinorUnits(value: MoneyString): bigint {
-  const match = /^(\d+)(?:\.(\d+))?$/.exec(value);
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value);
   if (!match) {
     throw new Error(`Invalid money value: ${value}`);
   }
-  const [, whole, fraction = ''] = match;
-  const padded = fraction.padEnd(2, '0').slice(0, 2);
-  return BigInt(whole as string) * 100n + BigInt(padded);
+  const [, sign, whole, fraction = ''] = match;
+  if (fraction.length > 2) {
+    throw new Error(`Money value has more than two decimal places: ${value}`);
+  }
+  const padded = fraction.padEnd(2, '0');
+  const units = BigInt(whole as string) * 100n + BigInt(padded);
+  return sign === '-' ? -units : units;
 }
 
 /**
@@ -137,10 +156,14 @@ export interface Money {
  * and symbol placement follow the currency convention. The ISO code is included
  * because a symbol alone is ambiguous across currencies (MON-003, RPT-005).
  *
- * The amount is converted to a `number` **for formatting only** — the exact
- * string remains the source of truth (RPT-006). `Intl.NumberFormat` cannot
- * consume a `BigInt` with a fractional part, so the value is passed as a
- * pre-formatted decimal string to avoid any float arithmetic in the output.
+ * The amount is handed to `Intl.NumberFormat` as a **decimal string**, not as a
+ * `number`. The string overload keeps every digit exactly: `'90071992547409.93'`
+ * formats as `$90,071,992,547,409.93`, whereas routing it through a JavaScript
+ * `number` first loses the last cent to binary floating point (MON-002).
+ *
+ * @throws if the amount is not a well-formed decimal string. `Intl` renders a
+ *   malformed value as `$NaN`, which would put nonsense on a salary screen —
+ *   invalid money must be caught here, not displayed.
  */
 export function formatMoney(
   amount: MoneyString,
@@ -150,15 +173,39 @@ export function formatMoney(
   const { includeCode = true, locale } = options;
   const meta = CURRENCIES[currency];
 
+  if (!isDecimalAmount(amount)) {
+    throw new Error(`Invalid money value: ${amount}`);
+  }
+
   const formatted = new Intl.NumberFormat(locale ?? meta?.locale ?? 'en-US', {
     style: 'currency',
     currency,
     currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(Number(amount));
+  }).format(amount);
 
   return includeCode ? `${formatted} ${currency}` : formatted;
+}
+
+/**
+ * A decimal amount shaped so `Intl.NumberFormat` accepts it as a string.
+ *
+ * `Intl`'s string overload takes a `StringNumericLiteral` — a template literal
+ * type, not a plain `string` — so a validated amount is narrowed to it.
+ */
+type FormattableAmount = `${number}`;
+
+/**
+ * True when the value is a plain decimal amount with at most two fraction
+ * digits — the shape the database stores and the formatter accepts.
+ *
+ * Deliberately stricter than `toMinorUnits`: the formatter also rejects a
+ * value with more than two decimals, because rounding it for display would
+ * hide a precision the rest of the system does not carry.
+ */
+function isDecimalAmount(value: string): value is FormattableAmount {
+  return /^-?\d+(?:\.\d{1,2})?$/.test(value);
 }
 
 /**
@@ -189,14 +236,24 @@ export function groupByCurrency(values: readonly Money[]): Map<CurrencyCode, Mon
 }
 
 /**
- * Total a group of amounts that all share one currency.
+ * Total amounts that all share one currency.
+ *
+ * Takes fully-formed `Money` values rather than bare amount strings, so the
+ * single-currency rule is **enforceable**: a mixed-currency total cannot even
+ * be expressed, and one that slips through is a runtime error rather than a
+ * misleading number on screen (MON-004, RPT-007).
  *
  * @throws if the amounts span more than one currency — the caller must group
- * first. This makes a mixed-currency total a runtime error rather than a
- * misleading number on screen.
+ *   with `groupByCurrency` first.
  */
-export function totalSameCurrency(amounts: readonly MoneyString[]): MoneyString {
-  return amounts.reduce<MoneyString>((sum, amount) => addMoney(sum, amount), '0.00');
+export function totalSameCurrency(values: readonly Money[]): MoneyString {
+  const currencies = new Set(values.map((value) => value.currency));
+  if (currencies.size > 1) {
+    throw new Error(
+      `Cannot total amounts across currencies: ${[...currencies].sort().join(', ')}`,
+    );
+  }
+  return values.reduce<MoneyString>((sum, value) => addMoney(sum, value.amount), '0.00');
 }
 
 /**

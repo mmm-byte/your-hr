@@ -77,8 +77,48 @@ describe('validateSalaryRevision', () => {
     expect(codesFor(revision({ bonusPct: '101' }))).toContain(ERROR_CODES.VALIDATION_ERROR);
   });
 
+  it('compares the bonus percentage exactly, at the hundredth of a percent', () => {
+    // 100.00 must be accepted and 100.01 must be rejected. A float comparison
+    // of 100.01 is fine, but the point is that the boundary is decided on the
+    // stored scale rather than on a binary approximation of it.
+    expect(codesFor(revision({ bonusPct: '100.00' }))).not.toContain(
+      ERROR_CODES.VALIDATION_ERROR,
+    );
+    expect(codesFor(revision({ bonusPct: '100.01' }))).toContain(
+      ERROR_CODES.VALIDATION_ERROR,
+    );
+    expect(codesFor(revision({ bonusPct: '12.50' }))).not.toContain(
+      ERROR_CODES.VALIDATION_ERROR,
+    );
+    expect(codesFor(revision({ bonusPct: '99.99' }))).not.toContain(
+      ERROR_CODES.VALIDATION_ERROR,
+    );
+  });
+
+  it('rejects a bonus percentage with more precision than the column can hold', () => {
+    // bonus_pct is numeric(5,2); a third decimal cannot be stored, so the
+    // value is rejected rather than silently rounded.
+    expect(codesFor(revision({ bonusPct: '12.345' }))).toContain(
+      ERROR_CODES.VALIDATION_ERROR,
+    );
+  });
+
+  it('rejects a malformed bonus percentage', () => {
+    expect(codesFor(revision({ bonusPct: 'abc' }))).toContain(ERROR_CODES.VALIDATION_ERROR);
+    expect(codesFor(revision({ bonusPct: '' }))).toContain(ERROR_CODES.VALIDATION_ERROR);
+  });
+
   it('rejects an effective date before the hire date', () => {
     expect(codesFor(revision({ effectiveFrom: '2019-12-31' }))).toContain(
+      ERROR_CODES.VALIDATION_ERROR,
+    );
+  });
+
+  it('rejects an effective date before the hire date even when the employee is on leave', () => {
+    // ELG-003 refines SAL-004: the hire date is the boundary for every
+    // eligible status, not only for an active employee.
+    const onLeave: EmploymentContext = { ...employment, employmentStatus: 'on_leave' };
+    expect(codesFor(revision({ effectiveFrom: '2019-12-31' }), onLeave)).toContain(
       ERROR_CODES.VALIDATION_ERROR,
     );
   });
@@ -171,5 +211,16 @@ describe('isUnchangedRevision', () => {
 
   it('treats a first record as a change', () => {
     expect(isUnchangedRevision(revision(), null)).toBe(false);
+  });
+
+  it('does not throw on a malformed amount', () => {
+    // The validation rules reject the malformed value; this function explains
+    // the rejection, so it must not be the thing that crashes.
+    expect(
+      isUnchangedRevision(revision({ baseSalary: 'abc' }), {
+        baseSalary: '50000.00',
+        bonusPct: '5.00',
+      }),
+    ).toBe(false);
   });
 });
