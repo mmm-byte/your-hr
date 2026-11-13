@@ -19,7 +19,7 @@ Before adding a utility, search for an existing one and confirm at least two gen
 ## Modules
 | Module | Owns | Rules |
 |---|---|---|
-| `domain-values.ts` | Every closed value set, declared once as a readonly tuple | MON-001, QRY-003, QRY-005, D-024 |
+| `domain-values.ts` | Every closed value set, declared once as a readonly tuple, with the display label for each | MON-001, QRY-003, QRY-005, D-024 |
 | `money.ts` | Exact decimal money, currency metadata, the central formatter | MON-001…006, RPT-005…007 |
 | `date-only.ts` | `YYYY-MM-DD` calendar days with no timezone shift | RPT-004, RPT-001 |
 | `salary-rules.ts` | Salary revision validation and eligibility | SAL-002…009, SAL-012, ELG-001…004, CON-001 |
