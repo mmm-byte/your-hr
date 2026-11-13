@@ -1,7 +1,7 @@
 # Your HR — Delivery Plan (Base to Top)
 
 **Purpose:** the build order, the gate each phase must pass, and the exact commands that prove it.
-**Status:** proposed — Phase 0 starts on approval.
+**Status:** Phase 0 complete (2026-11-12) · Phase 1 next — schema, migrations, seed.
 **Owner:** engineer. AI proposes and implements; every claim below is verified by a command, not by assertion.
 
 This plan sequences work bottom-up so that every later phase inherits something already proven.
@@ -490,15 +490,23 @@ commit message says so.
 
 ---
 
-## 7. Immediate next actions (Phase 0)
+## 7. Immediate next actions
+
+**Phase 0 — complete.** Gate 0 passed on 2026-11-12: `pnpm install`, `pnpm lint`,
+`pnpm typecheck`, `pnpm test` (8 files, 110 tests), and `pnpm build` all green,
+with a smoke check confirming the shell renders, the assessment notice is present,
+the 404 page works, and `/api/health` returns a safe degraded payload when no
+database is reachable.
+
+**Phase 1 — next.** Schema, migrations, and the deterministic seed.
 
 1. Free disk space (B3) — prune the pnpm store, remove the redundant `SalaryLens` backup once confirmed.
-2. `git init` + first commit of the current documentation state.
-3. Create the GitHub repository and push the documentation baseline.
-4. Add `.gitignore`, `.env.example`, root `README.md`.
-5. Write `package.json` with the ten required scripts and the verified dependency versions from §0.
-6. Scaffold Next.js 16 into the tree **without** overwriting `docs/`, `Dataset/`, `tests/`.
-7. Prove Gate 0, then push.
+2. Drizzle schema for the eight tables in [DATABASE.md](DATABASE.md) with the documented constraints.
+3. `drizzle-kit generate` and commit the migrations.
+4. Deterministic seed from the CSV dataset, chunked and resumable.
+5. `db:verify` — counts, uniqueness, orphans, date ranges, currency alignment.
+6. Integration tests against PGlite using the same generated SQL.
+7. Prove Gate 1, then push.
 
 **Open items requiring your decision (not blocking — the recommended default will be used):**
 

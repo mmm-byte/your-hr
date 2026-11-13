@@ -158,6 +158,15 @@ This is a lightweight decision register. Add an entry when a decision changes pr
 **Consequences:** The absence summary query distinguishes "no rows" from "rows totalling zero". Verified in the source: no employee has a zero count with a positive day total, and the 4,582 blanks are genuinely record-less employees.
 **Revisit when:** The source data distinguishes blanks from zeros explicitly.
 
+## D-020 — The pnpm store is pinned to a user-level path, not a project-local one
+**Status:** accepted
+**Context:** pnpm keeps its content-addressable store in a *user-level* cache and reuses it across projects. It only falls back to a **project-local** `.pnpm-store` when the package root cannot hardlink into `$HOME`. That fallback copies the entire store into the checkout — roughly a gigabyte for this dependency set. On the development machine the volume is 99–100% full, so the fallback both duplicates the cache and makes installs stall for many minutes. The committed `.npmrc` originally pinned an **absolute macOS path**, which would have failed outright on a Linux CI runner.
+**Decision:** Pin the store to `${HOME}/Library/pnpm/store` in the committed `.npmrc`. `${HOME}` is expanded by pnpm itself, so the value stays correct per machine; pnpm creates the directory when it is missing, which is what a cold Linux CI runner needs (verified by installing into a fresh nested path). The metadata cache is pinned to the project-local `.pnpm-cache` because the default under `~/Library/Caches` is not writable in a sandboxed environment.
+**Alternatives considered:** (a) no `store-dir` override — pnpm selects the project-local store here and the install stalls copying a gigabyte; (b) an absolute `/Users/...` path — works locally but breaks CI and every other developer; (c) `${HOME}/.pnpm-store` — platform-neutral, but a symlink into the real store broke pnpm's store-server socket and the install hung; (d) `${XDG_DATA_HOME:-...}` — pnpm does not support default-value expansion, so the literal string was used as a path.
+**Why:** The store location is invisible in the product but decides whether `pnpm install` completes in seconds or hangs for ten minutes. It has to work on a clean CI runner without any manual setup.
+**Consequences:** `pnpm install` reuses the shared cache and completes in seconds. The store path is machine-specific but the *rule* is committed, so every environment resolves it the same way.
+**Revisit when:** pnpm changes its store-resolution defaults or gains default-value expansion in `.npmrc`.
+
 ## Decision template
 ### D-XXX — Title
 **Status:** proposed / accepted / superseded
