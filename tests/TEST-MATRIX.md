@@ -60,7 +60,7 @@ deliberately not applicable for that capability (see the non-applicable table).
 | Data quality | — | planned (Phase 5) | planned (Phase 5) | planned (Phase 5) | deterministic classification |
 | Seed invariants | tests/unit/csv.test.ts, tests/unit/seed-dataset.test.ts | tests/integration/seed.test.ts | — | — | repeat run, orphan, duplicate; `pnpm db:verify` 29/29 |
 | Health endpoint | — | planned (Phase 5) | — | planned (Phase 6) | DB unavailable + safe output |
-| Error code catalogue | tests/unit/error-codes.test.ts | — | tests/component/error-state.test.tsx | planned (Phase 6) | every D-017 code maps to a UI recovery |
+| Error code catalogue | tests/unit/error-codes.test.ts | — | tests/component/error-boundary.test.tsx, tests/component/directory.test.tsx | planned (Phase 6) | every D-017 code maps to a UI recovery; the raw database message never reaches the reader |
 
 ## Phase 1 coverage (complete 2026-11-13)
 The data layer is covered end to end. `pnpm db:verify` asserts 29 invariants against a
