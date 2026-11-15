@@ -63,6 +63,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve('./src'),
+      // `server-only` throws when a module is imported outside a React
+      // Server Component. A test is neither, so the marker is aliased to an
+      // empty module: the guard is a build-time check against a browser
+      // bundle, and it must not stop the server code being tested.
+      'server-only': resolve('./tests/setup/empty.ts'),
     },
   },
 });

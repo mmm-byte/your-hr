@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import type { Route } from 'next';
 import { Suspense } from 'react';
 import { ArrowLeft, CalendarDays, Gavel, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import { queryEmployeeProfile } from '@/db/queries/current-salary';
 import { formatDateLong, todayDateOnly } from '@/lib/date-only';
 import { readQueryState, readReportingDate } from '@/lib/url-state';
 import { salaryCardAsOf, salaryCardLabel } from '@/lib/employment';
+import { isEligibleForRevision } from '@/lib/salary-rules';
 import { CountryBranchLabel, DateFact, EmployeeIdentity, Fact, JobTitleLabel, WorkModeLabel } from '@/components/product/employee-identity';
 import { PageHeader } from '@/components/product/page-header';
 import { ReportingDatePicker } from '@/components/product/reporting-date-picker';
@@ -72,9 +74,22 @@ export default async function EmployeeProfilePage({
         title={`${employee.firstName} ${employee.lastName}`}
         context={`As of ${formatDateLong(reportingDate)}`}
         actions={
-          <Suspense fallback={null}>
-            <ReportingDatePicker value={reportingDate} max={todayDateOnly()} />
-          </Suspense>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* ELG-005: the revision surface is **absent** for an employee
+                who is not eligible, not merely disabled with a reason. A
+                terminated employee's history is closed. */}
+            {isEligibleForRevision(employee.employmentStatus) ? (
+              <Link
+                href={`/employees/${employee.id}/revise-salary` as Route}
+                className="inline-flex rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium hover:bg-surface-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                Revise salary
+              </Link>
+            ) : null}
+            <Suspense fallback={null}>
+              <ReportingDatePicker value={reportingDate} max={todayDateOnly()} />
+            </Suspense>
+          </div>
         }
       />
 
