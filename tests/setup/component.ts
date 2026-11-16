@@ -17,6 +17,15 @@ import { afterEach, vi } from 'vitest';
 /** The navigations the component under test requested, in order. */
 export const navigations: { href: string; method: 'push' | 'replace'; options: unknown }[] = [];
 
+/**
+ * The path the mocked router reports.
+ *
+ * A component that links to "the page I am on" — the conflict panel's
+ * refresh link, for instance — reads this. A test that needs a different
+ * path sets it before rendering.
+ */
+export const routerState = { pathname: '/employees' };
+
 const record = (method: 'push' | 'replace') => (href: string, options?: unknown) => {
   navigations.push({ href, method, options });
 };
@@ -30,11 +39,12 @@ vi.mock('next/navigation', () => ({
     refresh: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
-  usePathname: () => '/employees',
+  usePathname: () => routerState.pathname,
   useParams: () => ({}),
 }));
 
 afterEach(() => {
   cleanup();
   navigations.length = 0;
+  routerState.pathname = '/employees';
 });

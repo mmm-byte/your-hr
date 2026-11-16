@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, CircleCheck } from 'lucide-react';
 import { reviseSalary } from '@/server/revise-salary-action';
 import type { RevisionOutcome } from '@/server/revision-outcome';
@@ -548,6 +549,11 @@ function SuccessPanel({
  * whether to correct a field, refresh, or try again (D-017).
  */
 function FailurePanel({ state }: { state: Extract<RevisionOutcome, { ok: false }> }) {
+  // The refresh link points at this page, so the reader can reload and see
+  // the values that have moved on. It is resolved from the router, not from
+  // `window`, because this component is rendered on the server too (D-035).
+  const pathname = usePathname();
+
   if (state.code === 'SALARY_VERSION_CONFLICT') {
     return (
       <div
@@ -563,7 +569,7 @@ function FailurePanel({ state }: { state: Extract<RevisionOutcome, { ok: false }
           submit your revision again.
         </p>
         <a
-          href={window.location.pathname}
+          href={pathname}
           className="mt-2 inline-block rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium hover:bg-surface-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           Refresh and review

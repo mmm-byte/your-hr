@@ -17,6 +17,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { routerState } from '../setup/component';
 import { SalaryRevisionForm, type RevisionFormContext } from '@/components/product/salary-revision-form';
 import type { RevisionOutcome } from '@/server/revision-outcome';
 
@@ -221,6 +222,7 @@ describe('the salary revision form', () => {
   });
 
   it('offers a refresh when the version has moved on', async () => {
+    routerState.pathname = '/employees/2521/revise-salary';
     reviseSalary.mockResolvedValue({
       ok: false,
       code: 'SALARY_VERSION_CONFLICT',
@@ -234,7 +236,13 @@ describe('the salary revision form', () => {
 
     await submitForm();
 
-    expect(screen.getByRole('link', { name: 'Refresh and review' })).toBeInTheDocument();
+    // The link points at this page, so the reader reloads and sees what moved
+    // on. It is built from the router, not from `window`, so the component
+    // can also be rendered on the server (D-035).
+    expect(screen.getByRole('link', { name: 'Refresh and review' })).toHaveAttribute(
+      'href',
+      '/employees/2521/revise-salary',
+    );
   });
 
   it('explains a duplicate effective date', async () => {
