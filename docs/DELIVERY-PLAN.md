@@ -310,6 +310,45 @@ Defects found and fixed during the gate — each is now covered by a test:
 (the exact scenario proven in §0); a stale revision returns a safe conflict, never a silent overwrite;
 a terminated employee's revision is rejected server-side, not only hidden in the UI.
 
+**Gate 4 — passed 2026-11-16.** Evidence:
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (21 files, 312 tests), `pnpm test:integration`
+  (10 files, 146 tests), `pnpm build`, `pnpm db:verify` — all green.
+- **The atomicity is proven, not asserted.** `tests/integration/salary-revision.test.ts`
+  renames `audit_events` for the duration of the write, so the audit insert fails *after*
+  the salary insert has succeeded. The test then asserts **zero** salary rows were written,
+  the employee's version was unchanged, and no audit row was left behind (SAL-010).
+- **The concurrency control is proven.** Two writers submit against the same
+  `expectedVersion`; exactly one wins, the loser receives `SALARY_VERSION_CONFLICT`, and
+  nothing is written (CON-001, SAL-011). The check is a conditional update whose
+  affected-row count decides the outcome, so there is no window between the check and the
+  write (D-033).
+- **The eligibility gate is inside the transaction.** A terminated employee's revision is
+  refused server-side and writes nothing — the form is not merely hidden (ELG-001, D-034).
+- **The write was proven in a browser** against the seeded 10,000-person cohort: the live
+  comparison read `Increase of $5,283.06 USD (+7.07%)`, the submission succeeded, the
+  success panel reported *"Employee #2521's compensation is now at version 2"*, and the
+  profile then showed the new row as a *scheduled* revision while the current salary as of
+  15 Nov 2026 was unchanged (SAL-008).
+- Every reader-facing state was inspected in the browser: the ineligible employee (no form,
+  no link, an explanation that the history stays readable), the validation failure (a
+  message beside each field, `aria-invalid`, and "Nothing was saved"), the stale-version
+  conflict (the entries kept, with a refresh link), the duplicate effective date, the
+  unknown employee, and the 375px layout (no horizontal overflow).
+
+Defects found and fixed during the gate — each is now covered by a test:
+
+| Defect | Rule | Fix |
+|---|---|---|
+| The FX scale arithmetic used the decimal count as the multiplier, padding to 100,000 digits | MON-002 | The decimal count and the scale multiplier are separate constants; `toScaledUnits(value, decimals, scale)` |
+| The USD equivalent divided by 100 a second time | MON-002 | `equivalent_minor = salaryUnits × FX_RATE_SCALE ÷ rateUnits` |
+| The duplicate-date check accepted *any* unique violation, so an unrelated constraint was reported as a date conflict | SAL-006 | `isUniqueViolation` requires the named constraint |
+| A terminated employee's revision **succeeded** | ELG-001 | The eligibility gate runs inside the transaction (D-034) |
+| A stale write reported a misleading duplicate-date error, because the version was checked after the domain rules | CON-001 | The version check runs first — the form no longer describes the employee's state |
+| The client form imported the server module, pulling the database into the browser bundle | AGENTS.md §8 | The client-safe result types live in `src/server/revision-outcome.ts` |
+| The fixed currency was a **disabled** input, and a disabled input is not submitted by the browser | ELG-004 | It is a `readOnly` text input, so the reader sees it and the server receives it |
+| The conflict panel's refresh link read `window.location` during render | AGENTS.md §8 | The path comes from `usePathname()`, so the component can also be rendered on the server (D-035) |
+
 ---
 
 ### Phase 5 — Compensation, analytics, data quality
@@ -591,13 +630,24 @@ Two structural changes were also made:
 2026-11-13; see the Gate 3 section above for the evidence and the defects that were found and
 fixed while proving it.
 
-**Phase 4 — next.** The salary revision: the critical mutation path.
+**Phase 4 — done.** The salary revision: the critical mutation path. Gate 4 passed
+2026-11-16; see the Gate 4 section above for the evidence and the defects that were found
+and fixed while proving it.
 
-1. `src/server/salary-revision.ts` — the server action, the Zod boundary, and the transaction that writes `salary_records` and `audit_events` together (SAL-010, AUD-001).
-2. Optimistic concurrency — the request carries `expectedVersion`; the server rejects a stale write with a conflict rather than overwriting it (SAL-011, CON-001).
-3. `/employees/[employeeId]/revise-salary` — the form, with the eligibility gate (ELG-001…ELG-005) and the pending, success, validation-error, and conflict states (UI.md → States required on data surfaces).
-4. The revision surface is **absent** for an employee who is not eligible, not merely disabled (ELG-005).
-5. Prove Gate 4 — a revision changes the current salary, leaves the history append-only, and writes one audit row — then push.
+**Phase 5 — next.** Compensation, analytics, and data quality — the read side of the
+numbers the HR Manager actually asks questions about.
+
+1. `/compensation` — the filterable current-salary population, with the aggregates
+   **grouped by currency** so no page ever shows one number that sums six currencies
+   (MON-004, ANA-005).
+2. `/analytics` — headcount by country, department, and status; median and average by a
+   valid grouping; the distribution by level (ANA-002, ANA-003, ANA-006).
+3. `/data-quality` — deterministic issue rules with counts and links to the affected
+   employees (FEATURES.md).
+4. Charts via Recharts, each with a textual summary, never colour alone (UI.md).
+5. The aggregates are computed in the database, not in JavaScript over 10,000 rows, and
+   the aggregate correctness tests cover the odd/even median, the empty set, and the
+   multi-currency grouping (ANA-003/004/005).
 
 **Open items requiring your decision (not blocking — the recommended default will be used):**
 

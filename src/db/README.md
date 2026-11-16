@@ -33,6 +33,16 @@ Each non-trivial query documents callers, tables/indexes used, domain rules, and
 - `date-parsers.ts` — the `date` column parser shared by the pool, the scripts, and the tests (D-021).
 - `queries/employees.ts` — the directory query: search, filters, allow-listed sort, and pagination (QRY-001…007, ANA-007).
 - `queries/current-salary.ts` — the profile query: identity, current salary as of a date, salary history, and the supporting summaries (SAL-007, ELG-006).
+- `queries/salary-revision.ts` — the revision write: the context the form needs, and the transactional write that appends a salary row and its audit event together (SAL-010, SAL-011, ELG-001, AUD-001).
+
+### The revision write
+The write is guarded by a **conditional update** — `UPDATE employees SET version = version + 1
+WHERE id = ? AND version = ?` — and the affected-row count decides the outcome. A read-then-write
+check would let two concurrent writers both pass, so the check and the write are one statement
+inside one transaction (D-033). The eligibility gate is enforced **inside** that transaction
+as well, because a rule that is checked only in the domain layer can be defeated by the layer
+that owns the write (D-034). The module is generic over the query-result kind, so the same code
+runs against Neon and against PGlite.
 
 ## Tests
 PostgreSQL integration tests cover constraints, transactions, current-as-of-date, filters/aggregates, concurrency, and rollback. Never target production.
