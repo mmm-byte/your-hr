@@ -15,7 +15,7 @@
  * - The domain rules (tests/unit/salary-rules.test.ts)
  */
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { routerState } from '../setup/component';
 import { SalaryRevisionForm, type RevisionFormContext } from '@/components/product/salary-revision-form';
@@ -217,7 +217,12 @@ describe('the salary revision form', () => {
     );
     // CON-002: the reader's input survives, so the revision can be
     // re-applied after they have reviewed what changed.
-    expect(screen.getByLabelText('Base salary')).toHaveValue('60000.00');
+    //
+    // The restore happens in an effect, so it lands one commit after the
+    // panel appears — the assertion waits for it rather than assuming it.
+    await waitFor(() => {
+      expect(screen.getByLabelText('Base salary')).toHaveValue('60000.00');
+    });
     expect(screen.getByLabelText('Reason')).toHaveValue('My reason');
   });
 
