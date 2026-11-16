@@ -16,6 +16,10 @@ Reusable product presentation and interaction components.
 - `product/reporting-date-picker.tsx` — the shared reporting-date control, carried as `?asOf=` (RPT-003).
 - `product/salary-card.tsx` — `SalaryCard`, `SalaryHistoryEntry`. A terminated employee's salary is labelled as of termination (ELG-006).
 - `product/salary-revision-form.tsx` — the salary revision form: the live comparison, the contextual warnings, the pending, success, validation-error, and conflict states, and the double-submit guard (SAL-009, CON-001, CON-002, UX-JOURNEY §3 Step 6).
+- `product/aggregate-panel.tsx` — `AggregatePanel`, `CountGroupPanel`. Every aggregate is **grouped by currency**, and the panel is what makes that structural: a figure carries its currency code, and figures from different currencies are separate blocks. The USD-equivalent mode is labelled as such (MON-004, MON-005, ANA-005, RPT-007).
+- `product/charts.tsx` — `HeadcountBarChart`. A chart is a **second way to read the figures**, never the only way: it carries an accessible name, and the table beside it holds the same numbers (D-036).
+- `product/issue-list.tsx` — `IssueList`. The data-quality findings, each with a count and the affected employees linked. The framing is "needs review", never "corrupt" (FEATURES.md).
+- `product/analytics-controls.tsx` — `AnalyticsControls`. The metric and the grouping, written to the URL. The grouping options are filtered to what the chosen metric supports, so the control never offers an invalid pairing (QRY-003, RPT-003).
 - `product/empty-state.tsx`, `product/error-state.tsx`, `product/loading-skeleton.tsx`, `product/page-header.tsx` — the four states every data surface needs.
 
 ### The revision form

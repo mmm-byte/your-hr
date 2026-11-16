@@ -44,6 +44,18 @@ Weak entry:
 - AI must not receive real HR/salary/customer secrets.
 - Generated tests must demonstrate meaningful behavior, not merely mirror implementation.
 
+## Consequential sessions
+
+### AI-001 — Phase 6 release hardening
+**Date:** 2026-11-16
+**Task:** complete the local release gate before creating the reviewer-facing deployment.
+**Context supplied:** product, security, testing, delivery, and UX contracts; the existing Playwright suite and standalone deployment setup.
+**AI suggestion:** run the complete browser suite against its seeded PGlite cohort, then treat setup failures as release defects rather than environmental assumptions.
+**Engineer decision:** accepted with verification-driven fixes.
+**Reason:** the original harness addressed `server.js` from the wrong working directory and did not terminate the standalone child process, so later runs could silently target a stale build. The navigation labels also lacked accessible names because their text was hidden from assistive technology.
+**Verification:** `pnpm db:generate` reported no schema drift; lint/typecheck passed; 315 unit/component tests, 167 integration tests, and 22 Playwright tests passed; the standalone production build passed; all six benchmark paths remained within budget on the seeded 10,000-person cohort.
+**Artifacts/commit:** `tests/e2e/global-setup.ts`, `tests/e2e/global-teardown.ts`, `src/components/shell/navigation.tsx`, `src/components/shell/nav-link.tsx`, `tests/unit/health-route.test.ts`, `tests/TEST-MATRIX.md`.
+
 ## Review questions
 - What did AI make faster?
 - Where was AI wrong or incomplete?

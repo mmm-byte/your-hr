@@ -34,6 +34,19 @@ Each non-trivial query documents callers, tables/indexes used, domain rules, and
 - `queries/employees.ts` — the directory query: search, filters, allow-listed sort, and pagination (QRY-001…007, ANA-007).
 - `queries/current-salary.ts` — the profile query: identity, current salary as of a date, salary history, and the supporting summaries (SAL-007, ELG-006).
 - `queries/salary-revision.ts` — the revision write: the context the form needs, and the transactional write that appends a salary row and its audit event together (SAL-010, SAL-011, ELG-001, AUD-001).
+- `queries/compensation.ts` — the analytics reads: the filterable current-salary population, the currency-grouped aggregates, the grouped figures, the workforce summary, the recent changes, and the deterministic data-quality rules (ANA-001…007, MON-002…006).
+
+### The aggregates
+The currency aggregates are computed **in PostgreSQL** — `percentile_cont` for the
+median, `avg` over `numeric` for the average — and grouped by `currency_code`, so a
+mixed-currency total is not expressible (MON-004, ANA-005, ANA-007). The value is
+cast to `numeric` and rounded to two decimals **before** it is cast to text:
+`percentile_cont` returns `double precision`, and PostgreSQL has no
+`round(double precision, integer)` (D-038).
+
+Every aggregate reads each employee's **current** salary — the record effective on
+or before the reporting date — and not their whole history, because an employee with
+three raises has three salary records (ANA-006, D-037).
 
 ### The revision write
 The write is guarded by a **conditional update** — `UPDATE employees SET version = version + 1

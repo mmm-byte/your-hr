@@ -73,6 +73,8 @@ test.describe('the employee directory', () => {
 
     await page.reload();
 
-    await expect(page.getByRole('row').nth(1)).toHaveText(firstRow);
+    const reloadedFirstRow = page.getByRole('row').nth(1);
+    await expect(reloadedFirstRow).toBeVisible();
+    expect(await reloadedFirstRow.innerText()).toBe(firstRow);
   });
 });

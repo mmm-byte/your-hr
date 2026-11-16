@@ -27,8 +27,22 @@ Non-trivial route modules identify purpose, data source, applicable rules, and t
   that is **absent** for an employee who is not eligible (SAL-009, ELG-001…ELG-005,
   CON-001, CON-002, UX-JOURNEY §3 Step 6).
 
+- `/` — **Overview**. Workforce size split by status, the current pay grouped by
+  currency, the country and department distribution, the count of records needing
+  review, and the recent salary changes with the salary before and after
+  (ANA-001, ANA-002, UX-JOURNEY §5).
+- `/compensation` — the filterable current-salary population and its currency-grouped
+  aggregates (MON-004, ANA-001, ANA-005).
+- `/analytics` — headcount, median, and average by a chosen grouping, with the
+  grouping options narrowed to what the metric supports (ANA-002…006, QRY-003).
+- `/data-quality` — the deterministic findings that need review, each with its count
+  and the affected employees linked (FEATURES.md).
+
 Each route carries its own `loading.tsx`, `error.tsx`, and — for the profile — a scoped
 `not-found.tsx`, so every data surface has all four states (UI.md → States required on data surfaces).
+
+**The four analytics routes are rendered on demand**, not prerendered: they read the
+database, and the build must never need one (ENVIRONMENT.md → Build).
 
 ## The revision route
 The route owns the *presentation* of the revision and nothing else. It reads the employee's

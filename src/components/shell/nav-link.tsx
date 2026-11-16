@@ -43,7 +43,7 @@ export function NavLink({
           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       }`}
     >
-      <span aria-hidden="true" className={isActive ? 'font-semibold' : 'font-normal'}>
+      <span className={isActive ? 'font-semibold' : 'font-normal'}>
         {children}
       </span>
     </Link>

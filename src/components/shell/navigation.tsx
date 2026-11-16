@@ -22,7 +22,7 @@ import { NavLink } from './nav-link';
 export interface NavItem {
   readonly href: Route;
   readonly label: string;
-  readonly icon: ComponentType<{ className?: string }>;
+  readonly icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
@@ -42,7 +42,7 @@ export function Navigation() {
           return (
             <li key={item.href}>
               <NavLink href={item.href}>
-                <Icon className="size-4 shrink-0" />
+                <Icon aria-hidden="true" className="size-4 shrink-0" />
                 <span>{item.label}</span>
               </NavLink>
             </li>

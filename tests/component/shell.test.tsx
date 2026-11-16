@@ -81,6 +81,15 @@ describe('Navigation', () => {
       'Data Quality',
     ]);
   });
+
+  it('gives each navigation link an accessible name', () => {
+    render(<Navigation />);
+
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    for (const label of ['Overview', 'Employees', 'Compensation', 'Analytics', 'Data Quality']) {
+      expect(within(nav).getByRole('link', { name: label })).toBeInTheDocument();
+    }
+  });
 });
 
 describe('EmploymentStatusBadge', () => {

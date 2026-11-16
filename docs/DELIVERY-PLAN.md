@@ -367,6 +367,49 @@ Defects found and fixed during the gate — each is now covered by a test:
 **Gate 5:** `pnpm test` green; no page ever shows a single number that sums mixed currencies;
 aggregates computed in the database, not in JavaScript over 10,000 rows.
 
+**Gate 5 — passed 2026-11-16.** Evidence:
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (21 files, 312 tests),
+  `pnpm test:integration` (11 files, **167 tests**), `pnpm build` — all green.
+- **The aggregates are computed in PostgreSQL.** `percentile_cont(0.5) WITHIN GROUP
+  (ORDER BY base_salary)` for the median and `avg(base_salary)` for the average, both
+  grouped by `currency_code`. The benchmark measured the aggregate at a **24.95 ms**
+  median for 22,093 salary rows — a single database scan, not a scan in JavaScript
+  over the workforce (ANA-003, ANA-007, MON-002).
+- **No page shows a mixed-currency total.** The figures are grouped by currency in
+  the query itself, so a blended total is not *expressible* rather than merely
+  discouraged (MON-004, RPT-007, ANA-005). The synthetic USD equivalent is a
+  separate, labelled mode (MON-005, MON-006).
+- **The four surfaces were inspected in a browser** against the seeded 10,000-person
+  cohort: the overview, the compensation view, the analytics view, and the
+  data-quality work queue. Every one was checked at 375px and 1280px, and none had
+  horizontal overflow.
+- **The figures reconcile.** The currency aggregates sum to 10,000 (USD 4,000,
+  INR 2,000, and 1,000 each for GBP, EUR, CAD, and AUD); the headcount and the
+  distribution by level both sum to 5,722, which is the active and on-leave
+  workforce; and 5,412 active + 310 on leave + 4,278 terminated = 10,000.
+- **21 new integration tests** cover the aggregate correctness — the even-length
+  median, the odd-length median, the two-decimal median with no float noise, the
+  empty set, the multi-currency grouping, the current-salary-not-history rule, and
+  the determinism of the data-quality rules.
+
+Defects found and fixed during the gate — each is now covered by a test:
+
+| Defect | Rule | Fix |
+|---|---|---|
+| The median came back as `72265.01500000001` | MON-002 | `percentile_cont` returns `double precision`, so the value is cast to `numeric` before it is rounded |
+| The aggregates averaged the whole salary **history**, so an employee with three raises was counted three times | ANA-006 | They read each employee's current salary, through the same correlated `max(effective_from)` sub-query the population uses |
+| The salary distribution counted salary rows rather than employees | ANA-002 | It has its own branch, grouping employees by the dimension |
+| The recent-changes list was ordered by the row's creation time, which every seeded row shares, so the effective dates jumped around | SAL-007 | It is ordered by the effective date |
+| The four new pages were prerendered at build time, so the build needed a database | ENVIRONMENT.md | They are rendered on demand |
+| The employee not-found state returns HTTP 200 rather than 404 | — | **A Next.js 16 framework behaviour**, not a product defect: `notFound()` returns 200 in a dynamic route with a `loading.tsx` sibling (vercel/next.js#93239). The reader-facing state is correct and is what the E2E spec asserts |
+
+Two data-quality rules were **added** after probing the real cohort, which exhibits
+both: 672 employees whose stored USD equivalent disagrees with their own stated
+rate, and 4,582 with no absence summary. A rule that finds nothing is still
+implemented and still tested — but a rule that finds nothing in the *seed* was
+evidence that a better rule existed.
+
 ---
 
 ### Phase 6 — Hardening, performance, deployment
@@ -635,20 +678,33 @@ fixed while proving it.
 2026-11-16; see the Gate 4 section above for the evidence and the defects that were found
 and fixed while proving it.
 
-**Phase 5 — next.** Compensation, analytics, and data quality — the read side of the
-numbers the HR Manager actually asks questions about.
+**Phase 5 — done.** Compensation, analytics, and data quality. Gate 5 passed
+2026-11-16; see the Gate 5 section above for the evidence and the defects that were
+found and fixed while proving it.
 
-1. `/compensation` — the filterable current-salary population, with the aggregates
-   **grouped by currency** so no page ever shows one number that sums six currencies
-   (MON-004, ANA-005).
-2. `/analytics` — headcount by country, department, and status; median and average by a
-   valid grouping; the distribution by level (ANA-002, ANA-003, ANA-006).
-3. `/data-quality` — deterministic issue rules with counts and links to the affected
-   employees (FEATURES.md).
-4. Charts via Recharts, each with a textual summary, never colour alone (UI.md).
-5. The aggregates are computed in the database, not in JavaScript over 10,000 rows, and
-   the aggregate correctness tests cover the odd/even median, the empty set, and the
-   multi-currency grouping (ANA-003/004/005).
+**Phase 6 — next.** Hardening, performance, and deployment: the reviewer-ready pass.
+
+**Phase 6 progress — 2026-11-16.** The performance benchmark is recorded in
+`docs/PERFORMANCE.md`. The full Playwright suite now passes: 22 journeys run against
+a freshly seeded PGlite cohort and a standalone production build. The harness was
+corrected to start `server.js` relative to the standalone directory and to terminate
+its exact child server during teardown; without the latter, a subsequent run could
+silently target a stale build on an occupied port.
+
+1. The accessibility and responsive pass over every surface — semantic headings,
+   labels, keyboard paths, visible focus, form errors tied to their fields, and
+   status never by colour alone.
+2. The performance record — `pnpm db:benchmark` measures the six user-critical
+   paths and captures their query plans, and `docs/PERFORMANCE.md` records the
+   dataset, the environment, the timing range, and the index observations.
+3. The E2E suite — `pnpm test:e2e` seeds the cohort, builds the application, and
+   starts it, so a spec exercises the real workforce with no manual preparation.
+4. `docs/AI-USAGE.md`, `docs/TRACEABILITY.md`, and `tests/TEST-MATRIX.md` updated
+   with **real** test paths — no "planned" row left anywhere.
+5. `docs/DEMO-SCRIPT.md` rehearsed against the running application.
+6. The deployment step: a Neon project, `DATABASE_URL` set in Vercel, the
+   migrations applied, the seed run **explicitly**, and the production URL
+   verified from a clean browser.
 
 **Open items requiring your decision (not blocking — the recommended default will be used):**
 

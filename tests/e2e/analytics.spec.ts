@@ -73,8 +73,8 @@ test.describe('the analytics surfaces', () => {
 
     const workforce = page.getByRole('region', { name: 'Workforce size' });
     await expect(workforce).toBeVisible();
-    await expect(workforce.getByText('Active')).toBeVisible();
-    await expect(workforce.getByText('Terminated')).toBeVisible();
+    await expect(workforce.getByRole('link', { name: /^Active \d[\d,]* Employed today/ })).toBeVisible();
+    await expect(workforce.getByRole('link', { name: /^Terminated \d[\d,]* Have left the company/ })).toBeVisible();
 
     // The counts are separate, so a reader knows which population a figure
     // describes (ANA-001).

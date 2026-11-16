@@ -22,7 +22,7 @@
  * itself — the suite runs with `workers: 1`, so the writes are serialised.
  */
 import { spawn, type ChildProcess } from 'node:child_process';
-import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
@@ -61,11 +61,12 @@ export default async function globalSetup(): Promise<void> {
     recursive: true,
   });
 
-  server = spawn('node', ['.next/standalone/server.js'], {
+  server = spawn('node', ['server.js'], {
     cwd: join(projectRoot, '.next', 'standalone'),
     env: { ...process.env, PORT: String(E2E_PORT), HOSTNAME: '127.0.0.1' },
     stdio: 'inherit',
   });
+  await writeFile(join(workDir, 'server.pid'), String(server.pid));
 
   await waitForServer(`${E2E_BASE_URL}/api/health`);
 }
@@ -142,7 +143,7 @@ async function waitForServer(url: string): Promise<void> {
  * Stop the server and remove the database.
  */
 export async function globalTeardown(): Promise<void> {
-  server?.kill();
+  server?.kill('SIGTERM');
   server = undefined;
 
   if (databasePath !== undefined) {
