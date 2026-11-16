@@ -301,6 +301,14 @@ This is a lightweight decision register. Add an entry when a decision changes pr
 **Why:** A refused revision is a pause, not a dead end. Keeping the entries means the reader's next action is a decision, not a retype.
 **Consequences:** The form restores the values once per distinct submission, tracked by a key, so a re-render does not overwrite what the reader is currently typing (CON-002).
 
+## D-036 — A chart is a rendering of a table, never a replacement for it
+**Status:** accepted
+**Context:** The analytics surface needs charts, and the frozen architecture names Recharts as the only approved chart library. But a chart encodes its data in position, area, and hue — three channels that a reader with a colour-vision difference, a screen reader, or a printed page cannot decode. A median of $54,206 in a bar chart is invisible to someone who cannot see the bar, and "the tallest bar is $54,206" is not an answer a screen reader can give. The accessibility rule in `docs/UI.md` says status must never be colour-alone; the same reasoning applies with more force to every chart, because a chart is *entirely* colour and geometry.
+**Decision:** Every chart on the analytics surface is rendered **beside** a table that carries the same numbers, and beside a text summary that states what the chart shows in words. The chart is a second way to read the figures, not the only way. The table is the accessible source of truth; the chart is the fast read.
+**Alternatives considered:** (a) charts only — rejected: the data is then unreachable for a reader who cannot see it; (b) an `aria-label` on each SVG with the data summarised — better than nothing, but it puts a string of numbers into an attribute instead of into the document, where it cannot be read, selected, or navigated; (c) a table only, with no charts — accessible, but it makes the analytics page a wall of numbers, which is the reading experience the feature exists to improve.
+**Why:** The chart is a presentation; the table is the content. The rule "the table is the truth, the chart is the view" makes the accessible path the default one and the visual path an enhancement, rather than the other way around.
+**Consequences:** The analytics surface renders both, so a chart is never the only carrier of a number. The summary text is written by the page, not by the chart library, so its wording is reviewable. The Recharts dependency was added for this purpose and is the only chart library in the repository.
+
 ## Decision template
 ### D-XXX — Title
 **Status:** proposed / accepted / superseded

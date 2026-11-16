@@ -8,7 +8,7 @@ import { parseEmployeeDirectoryQuery } from '@/schemas/employee-directory';
 import { formatDateLong, todayDateOnly } from '@/lib/date-only';
 import { formatCount } from '@/lib/money';
 import { buildQueryString, hasActiveFilter, readQueryState, readReportingDate } from '@/lib/url-state';
-import { BRANCH_CODES } from '@/lib/domain-values';
+import { BRANCHES_BY_COUNTRY } from '@/lib/domain-values';
 import { DataTable, Pagination, type Column } from '@/components/product/data-table';
 import { EmptyState, NoMatchState } from '@/components/product/empty-state';
 import { FilterBar } from '@/components/product/filter-bar';
@@ -329,14 +329,7 @@ function directoryHref(query: string): Route {
  * The branch codes in each country.
  *
  * The branch filter is dependent: choosing a country narrows the branch
- * options to that country's branches (UX-JOURNEY §3). The mapping is derived
- * from the seeded branch codes rather than hard-coded twice.
+ * options to that country's branches (UX-JOURNEY §3). The mapping lives in
+ * `@/lib/domain-values`, because the compensation view needs the same one and
+ * two copies of a mapping would drift.
  */
-const BRANCHES_BY_COUNTRY: Readonly<Record<string, readonly string[]>> = {
-  US: BRANCH_CODES.filter((code) => code.startsWith('US-')),
-  IN: BRANCH_CODES.filter((code) => code.startsWith('IN-')),
-  GB: BRANCH_CODES.filter((code) => code.startsWith('GB-')),
-  DE: BRANCH_CODES.filter((code) => code.startsWith('DE-')),
-  CA: BRANCH_CODES.filter((code) => code.startsWith('CA-')),
-  AU: BRANCH_CODES.filter((code) => code.startsWith('AU-')),
-};

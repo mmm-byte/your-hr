@@ -165,3 +165,21 @@ export const DEPARTMENT_NAMES = [
   'Web Engineering',
 ] as const;
 export type DepartmentName = (typeof DEPARTMENT_NAMES)[number];
+
+/**
+ * The branches that belong to each country.
+ *
+ * The country → branch filter is **dependent**: choosing a country narrows
+ * the branch list to that country's branches (UX-JOURNEY §3). The mapping is
+ * derived from the branch code's country prefix rather than written out by
+ * hand, so a new branch cannot be added without appearing under its country.
+ */
+export const BRANCHES_BY_COUNTRY: Readonly<Record<string, readonly string[]>> =
+  Object.freeze(
+    Object.fromEntries(
+      COUNTRY_CODES.map((country) => [
+        country,
+        BRANCH_CODES.filter((code) => code.startsWith(`${country}-`)),
+      ]),
+    ),
+  );
