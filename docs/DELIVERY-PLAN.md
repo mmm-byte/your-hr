@@ -348,6 +348,7 @@ Defects found and fixed during the gate — each is now covered by a test:
 | The client form imported the server module, pulling the database into the browser bundle | AGENTS.md §8 | The client-safe result types live in `src/server/revision-outcome.ts` |
 | The fixed currency was a **disabled** input, and a disabled input is not submitted by the browser | ELG-004 | It is a `readOnly` text input, so the reader sees it and the server receives it |
 | The conflict panel's refresh link read `window.location` during render | AGENTS.md §8 | The path comes from `usePathname()`, so the component can also be rendered on the server (D-035) |
+| The conflict test asserted on the restored input before the restore effect had run — green locally, red in CI | AGENTS.md §11 | The assertion waits for the value to arrive, because the panel and the restored fields are two steps, not one |
 
 ---
 
