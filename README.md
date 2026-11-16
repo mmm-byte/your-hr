@@ -61,6 +61,23 @@ pnpm dev
 | `pnpm db:seed` | Seed the deterministic 10,000-person cohort |
 | `pnpm db:verify` | Verify seed invariants (non-zero exit on failure) |
 
+## Production database setup
+
+Vercel deploys the application; it does **not** apply migrations or seed data during a build or request.
+After attaching Neon to the Vercel project and configuring the server-only `DATABASE_URL` for the target
+environment, pull the environment locally and run the explicit release operation once:
+
+```bash
+vercel env pull .env.local --yes
+pnpm db:migrate
+pnpm db:seed
+pnpm db:verify
+```
+
+`db:seed` refuses a populated target, so it cannot silently replace a deployed workforce. A deployment
+that logs `relation "employees" does not exist` has a reachable but unmigrated database; run the sequence
+above against the intended environment, then verify `/api/health` before sharing the URL.
+
 ---
 
 ## Repository layout
